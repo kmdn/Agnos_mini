@@ -38,11 +38,15 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
+import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.rio.ParseException;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
-import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.StatementHandler;
+import org.openrdf.rio.StatementHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 import org.openrdf.rio.turtle.TurtleParser;
 import org.slf4j.LoggerFactory;
@@ -94,7 +98,8 @@ public class TripleIndexCreatorContext {
 			String envNodeType = System.getenv("AGDISTIS_NODE_TYPE");
 			nodeType = envNodeType != null ? envNodeType : prop.getProperty("nodeType");
 			String envFolderWithTtlFiles = System.getenv("AGDISTIS_FOLDER_WITH_TTL_FILES");
-			String folder = envFolderWithTtlFiles != null ? envFolderWithTtlFiles : prop.getProperty("folderWithTTLFiles");
+			String folder = envFolderWithTtlFiles != null ? envFolderWithTtlFiles
+					: prop.getProperty("folderWithTTLFiles");
 			log.info("Getting triple data from: " + folder);
 			List<File> listOfFiles = new ArrayList<File>();
 			for (File file : new File(folder).listFiles()) {
@@ -160,25 +165,34 @@ public class TripleIndexCreatorContext {
 		}
 	}
 
-	private void indexTTLFile(File file, String baseURI)
-			throws RDFParseException, RDFHandlerException, FileNotFoundException, IOException {
+	private void indexTTLFile(File file, String baseURI) throws RDFParseException, RDFHandlerException,
+			FileNotFoundException, IOException, ParseException, StatementHandlerException {
 		log.info("Start parsing: " + file);
-		RDFParser parser = new TurtleParser();
+		TurtleParser parser = new TurtleParser();
 		OnlineStatementHandler osh = new OnlineStatementHandler();
-		parser.setRDFHandler(osh);
+		parser.setStatementHandler(osh);
 		parser.setStopAtFirstError(false);
 		parser.parse(new FileReader(file), baseURI);
 		log.info("Finished parsing: " + file);
 	}
 
-	private class OnlineStatementHandler extends RDFHandlerBase {
+	private class OnlineStatementHandler extends RDFHandlerBase implements StatementHandler {
 		@Override
 		public void handleStatement(Statement st) {
-			String subject = st.getSubject().stringValue();
-			String predicate = st.getPredicate().stringValue();
-			String object = st.getObject().stringValue();
 			try {
-				addDocumentToIndex(subject, predicate, object, st.getObject() instanceof URI);
+				handleStatement(st.getSubject(), st.getPredicate(), st.getObject());
+			} catch (StatementHandlerException e) {
+				e.printStackTrace();
+			}
+		}
+
+		@Override
+		public void handleStatement(Resource subject, URI predicate, Value object) throws StatementHandlerException {
+			String strSubject = subject.toString();
+			String strPredicate = predicate.toString();
+			String strObject = object.toString();
+			try {
+				addDocumentToIndex(strSubject, strPredicate, strObject, object instanceof URI);
 				iwriter.commit();
 				ireader = DirectoryReader.open(directory);
 				isearcher = new IndexSearcher(ireader);

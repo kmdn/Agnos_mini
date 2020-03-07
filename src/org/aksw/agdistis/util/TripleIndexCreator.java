@@ -25,11 +25,16 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
+import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
+import org.openrdf.rio.ParseException;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.StatementHandler;
+import org.openrdf.rio.StatementHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 import org.openrdf.rio.turtle.TurtleParser;
 import org.slf4j.LoggerFactory;
@@ -135,11 +140,11 @@ public class TripleIndexCreator {
 	}
 
 	private void indexTTLFile(File file, String baseURI)
-			throws RDFParseException, RDFHandlerException, FileNotFoundException, IOException {
+			throws RDFParseException, RDFHandlerException, FileNotFoundException, IOException, ParseException, StatementHandlerException {
 		log.info("Start parsing: " + file);
-		RDFParser parser = new TurtleParser();
+		TurtleParser parser = new TurtleParser();
 		OnlineStatementHandler osh = new OnlineStatementHandler();
-		parser.setRDFHandler(osh);
+		parser.setStatementHandler(osh);
 		parser.setStopAtFirstError(false);
 		if (baseURI == null) {
 			parser.parse(new FileReader(file), "");
@@ -192,14 +197,21 @@ public class TripleIndexCreator {
 		}
 	}
 
-	private class OnlineStatementHandler extends RDFHandlerBase {
+	private class OnlineStatementHandler extends RDFHandlerBase implements StatementHandler {
 		@Override
 		public void handleStatement(Statement st) {
-			String subject = st.getSubject().stringValue();
-			String predicate = st.getPredicate().stringValue();
-			String object = st.getObject().stringValue();
 			try {
-				addDocumentToIndex(iwriter, subject, predicate, object, st.getObject() instanceof URI);
+				handleStatement(st.getSubject(), st.getPredicate(), st.getObject());
+			} catch (StatementHandlerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		@Override
+		public void handleStatement(Resource subject, URI predicate, Value object) throws StatementHandlerException {
+			try {
+				addDocumentToIndex(iwriter, subject.toString(), predicate.toString(), object.toString(), object instanceof URI);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
