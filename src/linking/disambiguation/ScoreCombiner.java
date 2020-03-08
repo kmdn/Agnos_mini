@@ -1,6 +1,7 @@
 package linking.disambiguation;
 
-import structure.config.constants.Numbers;
+import java.util.function.BiFunction;
+
 import structure.interfaces.Scorer;
 import structure.utils.Loggable;
 
@@ -20,7 +21,9 @@ public class ScoreCombiner<T> implements Loggable {
 		// Generally not needed, but PR unfortunately can have some extremely high
 		// values by comparison and as such requires some smoothing (e.g. through
 		// sqrt())
-		return add(currScore, weight.doubleValue() * scorer.getFunction().apply(score, scorerParam).doubleValue());
+		final BiFunction<Number, T, Number> func = scorer.getScoreModulationFunction();
+		final Number modulatedVal = func == null ? score : func.apply(score, scorerParam).doubleValue();
+		return add(currScore, weight.doubleValue() * modulatedVal.doubleValue());
 //		if (scorer instanceof PageRankScorer) {
 //			// Pretty much just sets the weight
 //			final Double prScore = Numbers.PAGERANK_WEIGHT.val.doubleValue()

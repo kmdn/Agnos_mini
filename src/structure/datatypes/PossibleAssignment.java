@@ -1,11 +1,8 @@
 package structure.datatypes;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 
-import linking.disambiguation.ScoreCombiner;
+import linking.disambiguation.Disambiguator;
 import structure.interfaces.PostScorer;
 import structure.interfaces.Scorable;
 import structure.interfaces.Scorer;
@@ -26,12 +23,6 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	private final String mentionToken;
 	private boolean computedScore = false;
 	private boolean warned = false;
-	@SuppressWarnings("rawtypes")
-	private static Set<Scorer<PossibleAssignment>> scorers = new HashSet<>();
-	@SuppressWarnings("rawtypes")
-	private static Set<PostScorer<PossibleAssignment, Mention>> postScorers = new HashSet<>();
-	@SuppressWarnings("rawtypes")
-	private static ScoreCombiner<PossibleAssignment> combiner = null;
 
 	@SuppressWarnings("rawtypes")
 	public static PossibleAssignment createNew(final String assignment, final String mentionToken) {
@@ -43,33 +34,6 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	public PossibleAssignment(final String assignment, final String mentionToken) {
 		this.assignment = assignment;
 		this.mentionToken = mentionToken;
-	}
-
-	/**
-	 * Adds a scorer for disambiguation
-	 * 
-	 * @param scorer
-	 */
-	public static void addScorer(@SuppressWarnings("rawtypes") final Scorer<PossibleAssignment> scorer) {
-		scorers.add(scorer);
-	}
-
-	public static void addPostScorer(
-			@SuppressWarnings("rawtypes") final PostScorer<PossibleAssignment, Mention> scorer) {
-		postScorers.add(scorer);
-	}
-
-	public static Set<Scorer<PossibleAssignment>> getScorers() {
-		return scorers;
-	}
-
-	public static Set<PostScorer<PossibleAssignment, Mention>> getPostScorers() {
-		return postScorers;
-	}
-
-	public static void setScoreCombiner(
-			@SuppressWarnings("rawtypes") final ScoreCombiner<PossibleAssignment> combiner) {
-		PossibleAssignment.combiner = combiner;
 	}
 
 	@Override
@@ -91,13 +55,13 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 		// wanted manner
 		// Pre-scoring step
 		for (@SuppressWarnings("rawtypes")
-		Scorer<PossibleAssignment> scorer : scorers) {
-			currScore = combiner.combine(currScore, scorer, this);
+		Scorer<PossibleAssignment> scorer : Disambiguator.getScorers()) {
+			currScore = Disambiguator.getScoreCombiner().combine(currScore, scorer, this);
 		}
 		// Post-scoring step
 		for (@SuppressWarnings("rawtypes")
-		PostScorer<PossibleAssignment, Mention> scorer : postScorers) {
-			currScore = combiner.combine(currScore, scorer, this);
+		PostScorer<PossibleAssignment, Mention> scorer : Disambiguator.getPostScorers()) {
+			currScore = Disambiguator.getScoreCombiner().combine(currScore, scorer, this);
 		}
 		this.score = currScore;
 		computedScore = true;

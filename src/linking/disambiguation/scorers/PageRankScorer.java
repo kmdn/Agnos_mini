@@ -102,6 +102,7 @@ public class PageRankScorer implements Scorer<PossibleAssignment> {
 
 	@Override
 	public int hashCode() {
+		//Means every instance will have the same hashCode value
 		return getClass().getName().hashCode();
 	}
 
@@ -111,8 +112,8 @@ public class PageRankScorer implements Scorer<PossibleAssignment> {
 	}
 
 	@Override
-	public BiFunction<Number, PossibleAssignment, Number> getFunction() {
-		return null;
+	public BiFunction<Number, PossibleAssignment, Number> getScoreModulationFunction() {
+		return func;
 	}
 
 }
