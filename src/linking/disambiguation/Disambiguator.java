@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,8 @@ public class Disambiguator implements Loggable {
 	private final HashSet<Mention> context = new HashSet<>();
 	private final EntitySimilarityService similarityService;
 
+	private final boolean IGNORE_DOUBLED_MENTIONS = true;
+
 	@SuppressWarnings("rawtypes")
 	private static final Set<Scorer<PossibleAssignment>> scorers = new HashSet<>();
 	@SuppressWarnings("rawtypes")
@@ -46,36 +49,30 @@ public class Disambiguator implements Loggable {
 	@SuppressWarnings("rawtypes")
 	private static ScoreCombiner<PossibleAssignment> combiner = null;
 
+	/**
+	 * Default setting constructor for a defined knowledge graph
+	 * 
+	 * @param KG
+	 * @throws IOException
+	 */
 	public Disambiguator(final EnumModelType KG) throws IOException {
 		this(KG, EnumEmbeddingMode.DEFAULT);
 	}
 
 	public Disambiguator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode) throws IOException {
+		final CombineOperation combineOperation = CombineOperation.MAX_SIM;
+
 		// Determines how everything is scored!
 		setScoreCombiner(new ScoreCombiner<PossibleAssignment>());
 
-		// How to load pagerank
-		final String pagerankWatch = "pagerank";
-		Stopwatch.start(pagerankWatch);
-		final PageRankLoader pagerankLoader = new PageRankLoader(KG);
-		// Loads the pagerank from file
-		pagerankLoader.exec();
-		Stopwatch.endOutput(pagerankWatch);
-
-		// Pre-scoring
-		addScorer(new PageRankScorer(KG, pagerankLoader));
+		// Pre-Scoring
+		// Add PR Scoring and get PRLoader for other scoring mechanisms
+		final PageRankLoader pagerankLoader = setupPageRankScoring(KG);
 
 		// Post-scoring
 		// PossibleAssignment.addPostScorer(new VicinityScorer());
-		final Map<String, List<Number>> entityEmbeddingsMap;
-		if (embeddingMode == EnumEmbeddingMode.LOCAL) {
-			entityEmbeddingsMap = GraphWalkEmbeddingScorer.humanload(
-					FilePaths.FILE_GRAPH_WALK_ID_MAPPING_ENTITY_HUMAN.getPath(KG),
-					FilePaths.FILE_EMBEDDINGS_GRAPH_WALK_ENTITY_EMBEDDINGS.getPath(KG));
-			this.similarityService = new EntitySimilarityService(entityEmbeddingsMap);
-		} else {
-			this.similarityService = new EntitySimilarityService();
-		}
+
+		this.similarityService = setupSimilarityService(KG, embeddingMode);
 //		int displayCounter = 0;
 //		for (Entry<String, List<Number>> e : entityEmbeddingsMap.entrySet()) {
 //			System.out.println(e.getKey());
@@ -86,10 +83,8 @@ public class Disambiguator implements Loggable {
 //			}
 //		}
 
-		final CombineOperation combineOperation = CombineOperation.MAX_SIM;
-
 		addPostScorer(new GraphWalkEmbeddingScorer(new ContinuousHillClimbingPicker(
-				//// combineOperation.combineOperation,
+				// combineOperation.combineOperation,
 				similarityService, pagerankLoader)));
 
 		for (PostScorer postScorer : getPostScorers()) {
@@ -99,34 +94,93 @@ public class Disambiguator implements Loggable {
 		}
 	}
 
-	public void disambiguate(final List<Mention> mentions) throws InterruptedException {
-		// In order to avoid disambiguating multiple times for the same mention word, we
-		// split our mentions up and then just copy results from the ones that were
-		// computed
-		final Map<String, List<Mention>> mentionMap = new HashMap<>();
-		// Split up the mentions by their keys
-		for (final Mention mention : mentions) {
-			List<Mention> val;
-			if ((val = mentionMap.get(mention.getMention())) == null) {
-				val = Lists.newArrayList();
-				mentionMap.put(mention.getMention(), val);
-			}
-			val.add(mention);
+	private EntitySimilarityService setupSimilarityService(EnumModelType KG, final EnumEmbeddingMode embeddingMode)
+			throws IOException {
+		final Map<String, List<Number>> entityEmbeddingsMap;
+		if (embeddingMode == EnumEmbeddingMode.LOCAL) {
+			entityEmbeddingsMap = GraphWalkEmbeddingScorer.humanload(
+					FilePaths.FILE_GRAPH_WALK_ID_MAPPING_ENTITY_HUMAN.getPath(KG),
+					FilePaths.FILE_EMBEDDINGS_GRAPH_WALK_ENTITY_EMBEDDINGS.getPath(KG));
+			return new EntitySimilarityService(entityEmbeddingsMap);
+		} else {
+			return new EntitySimilarityService();
 		}
-		for (final Map.Entry<String, List<Mention>> e : mentionMap.entrySet()) {
-			// Just score the first one within the lists
-			final List<Mention> sameWordMentions = e.getValue();
-			final Mention mention = sameWordMentions.get(0);
-			score(mention);
-			// Assign the top-scored possible assignment to the mention
-			mention.assignBest();
-			// Copy into the other mentions
-			for (int i = 1; i < e.getValue().size(); ++i) {
-				// Skip the first one as it's just time lost...
-				final Mention sameWordMention = sameWordMentions.get(i);
-				sameWordMention.copyResults(mention);
+	}
+
+	/**
+	 * Adds PR scorer and loads the PR scores
+	 */
+	private PageRankLoader setupPageRankScoring(final EnumModelType KG) throws IOException {
+		// How to load pagerank
+		final String pagerankWatch = "pagerank";
+		Stopwatch.start(pagerankWatch);
+		final PageRankLoader pagerankLoader = new PageRankLoader(KG);
+		// Loads the pagerank from file
+		pagerankLoader.exec();
+		Stopwatch.endOutput(pagerankWatch);
+
+		// Pre-scoring
+		addScorer(new PageRankScorer(KG, pagerankLoader));
+		return pagerankLoader;
+	}
+
+	public void disambiguate(final Collection<Mention> mentions) throws InterruptedException {
+		disambiguate(mentions, IGNORE_DOUBLED_MENTIONS);
+	}
+
+	/**
+	 * Disambiguate mentions and find the best possible assignment for each
+	 * 
+	 * @param mentions              list of mentions
+	 * @param removeDoubledMentions
+	 * @throws InterruptedException
+	 */
+	public void disambiguate(final Collection<Mention> mentions, final boolean removeDoubledMentions)
+			throws InterruptedException {
+		// Update contexts
+		updatePostContext(mentions);
+
+		// Start sending mentions to scorers
+		if (removeDoubledMentions) {
+			// In order to avoid disambiguating multiple times for the same mention word, we
+			// split our mentions up and then just copy results from the ones that were
+			// computed
+			final Map<String, Collection<Mention>> mentionMap = new HashMap<>();
+			// Split up the mentions by their keys
+			for (final Mention mention : mentions) {
+				Collection<Mention> val;
+				if ((val = mentionMap.get(mention.getMention())) == null) {
+					val = Lists.newArrayList();
+					mentionMap.put(mention.getMention(), val);
+				}
+				val.add(mention);
+			}
+			for (final Map.Entry<String, Collection<Mention>> e : mentionMap.entrySet()) {
+				// Just score the first one within the lists of doubled mentions
+				final Collection<Mention> sameWordMentions = e.getValue();
+				final Mention mention = sameWordMentions.iterator().next();// .get(0);
+				score(mention);
+				// Assign the top-scored possible assignment to the mention
+				mention.assignBest();
+				// Copy into the other mentions
+				// for (int i = 1; i < e.getValue().size(); ++i) {
+				final Iterator<Mention> itSameWordMentions = sameWordMentions.iterator();
+				while (itSameWordMentions.hasNext()) {
+					// Skip the first one as it's just time lost...
+					final Mention sameWordMention = itSameWordMentions.next();
+					sameWordMention.copyResults(mention);
+				}
+			}
+		} else {
+			for (Mention mention : mentions) {
+				// Compute the score for this mention
+				score(mention);
+				// Assign the best possible assignment to this mention
+				// Best assignment can be retrieved from mention object directly
+				mention.assignBest();
 			}
 		}
+		clearContext();
 	}
 
 	/**
@@ -177,7 +231,7 @@ public class Disambiguator implements Loggable {
 	 * @param mentions
 	 */
 	public void updatePostContext(Collection<Mention> mentions) {
-		this.context.clear();
+		clearContext();
 		this.context.addAll(mentions);
 		for (PostScorer postScorer : getPostScorers()) {
 			postScorer.updateContext();
@@ -217,6 +271,10 @@ public class Disambiguator implements Loggable {
 
 	public static ScoreCombiner<PossibleAssignment> getScoreCombiner() {
 		return combiner;
+	}
+
+	private void clearContext() {
+		this.context.clear();
 	}
 
 }

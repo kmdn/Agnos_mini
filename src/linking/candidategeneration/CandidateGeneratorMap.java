@@ -51,4 +51,12 @@ public class CandidateGeneratorMap implements CandidateGenerator, Loggable {
 
 		return ret;
 	}
+
+	@Override
+	public void generate(Collection<Mention> mentions) {
+		for (Mention m : mentions) {
+			// Update possible assignments
+			m.updatePossibleAssignments(generate(m));
+		}
+	}
 }

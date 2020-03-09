@@ -1,5 +1,6 @@
 package structure.interfaces;
 
+import java.util.Collection;
 import java.util.List;
 
 import structure.datatypes.Mention;
@@ -25,4 +26,6 @@ public interface CandidateGenerator {
 	 * @return List of candidates
 	 */
 	public List<PossibleAssignment> generate(Mention mention);
+
+	public void generate(Collection<Mention> mentions);
 }

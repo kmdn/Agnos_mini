@@ -1,12 +1,17 @@
 package structure.utils;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import structure.config.constants.Strings;
 import structure.datatypes.Mention;
 
 public class MentionUtils {
@@ -103,6 +108,56 @@ public class MentionUtils {
 			bwResults.flush();
 		}
 		return sw.toString();
+	}
+
+	/**
+	 * Displays mentions
+	 * 
+	 * @param mentions
+	 */
+	public static void displayMentions(Collection<Mention> mentions) {
+		System.out.println("#######################################################");
+		System.out.println("Mention Details(" + mentions.size() + "):");
+		final TreeMap<String, Mention> alphabeticalSortedMentions = new TreeMap<String, Mention>();
+		final boolean detailed = true;
+		for (Mention m : mentions) {
+			alphabeticalSortedMentions.put(m.getMention() + "_" + m.getOriginalMention(), m);
+		}
+		// Display them
+		final File outFile = new File("." + "/" + "cb_linked_output.txt");
+		try {
+			try (BufferedWriter bwOut = new BufferedWriter(new FileWriter(outFile))) {
+				StringBuilder sb = new StringBuilder();
+				for (Map.Entry<String, Mention> e : alphabeticalSortedMentions.entrySet()) {
+					sb.setLength(0);
+					final Mention m = e.getValue();
+					if (detailed) {
+						sb.append("Mention[" + m.getMention() + "; " + m.getDetectionConfidence() + "] ");
+						sb.append(Strings.NEWLINE.val);
+						sb.append("Original Text:" + m.getOriginalMention());
+						sb.append(Strings.NEWLINE.val);
+						sb.append("Possible assignments: "
+								+ (m.getPossibleAssignments() != null ? m.getPossibleAssignments().size() : "None"));
+						sb.append(Strings.NEWLINE.val);
+						sb.append("Found assignment: " + m.getAssignment());
+						sb.append(Strings.NEWLINE.val);
+						sb.append("Found Assignment's Score: " + m.getAssignment().getScore());
+						sb.append(Strings.NEWLINE.val);
+						sb.append("--------------------------------------------------");
+						sb.append(Strings.NEWLINE.val);
+					} else {
+						sb.append(m.getOriginalMention() + "(" + m.getMention() + "; " + m.getDetectionConfidence()
+								+ ")\t\t-> " + m.getAssignment().getScore() + ":"
+								+ m.getAssignment().getAssignment().toString());
+						sb.append(Strings.NEWLINE.val);
+					}
+					bwOut.write(sb.toString());
+					System.out.println(sb.toString());
+				}
+			}
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
 	}
 
 	/**

@@ -90,8 +90,7 @@ public class Mention implements Loggable {
 	@Override
 	public int hashCode() {
 		// If all constituents are null, make it a weird sum, so there is no collision
-		// with
-		// anything else
+		// with anything else
 		return ((this.assignment == null) ? 2 : this.assignment.hashCode())
 				+ ((this.getMention() == null) ? 4 : (this.getMention().hashCode()))
 				+ ((this.getOriginalMention() == null) ? 8 : this.getOriginalMention().hashCode())
