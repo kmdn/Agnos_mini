@@ -1,4 +1,4 @@
-package preprocessing.loader;
+package structure.utils;
 
 import java.io.File;
 import java.io.IOException;

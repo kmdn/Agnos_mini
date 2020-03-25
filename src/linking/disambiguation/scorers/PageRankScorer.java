@@ -6,7 +6,7 @@ import java.util.function.BiFunction;
 
 import org.apache.log4j.Logger;
 
-import preprocessing.loader.PageRankLoader;
+import linking.disambiguation.scorers.pagerank.PageRankLoader;
 import structure.config.constants.FilePaths;
 import structure.config.constants.Numbers;
 import structure.config.kg.EnumModelType;

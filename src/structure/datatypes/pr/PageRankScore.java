@@ -1,6 +1,6 @@
 package structure.datatypes.pr;
 
-import preprocessing.loader.PageRankLoader;
+import linking.disambiguation.scorers.pagerank.PageRankLoader;
 
 /**
  * A score assignment - used majorly by {@link PageRankLoader}. Each

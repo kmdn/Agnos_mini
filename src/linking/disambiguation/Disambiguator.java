@@ -15,14 +15,18 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.collect.Lists;
 
 import linking.disambiguation.scorers.ContinuousHillClimbingPicker;
 import linking.disambiguation.scorers.GraphWalkEmbeddingScorer;
 import linking.disambiguation.scorers.PageRankScorer;
+import linking.disambiguation.scorers.VicinityScorerDirectedSparseGraph;
 import linking.disambiguation.scorers.embedhelp.CombineOperation;
 import linking.disambiguation.scorers.embedhelp.EntitySimilarityService;
-import preprocessing.loader.PageRankLoader;
+import linking.disambiguation.scorers.pagerank.PageRankLoader;
+import structure.config.constants.Comparators;
 import structure.config.constants.EnumEmbeddingMode;
 import structure.config.constants.FilePaths;
 import structure.config.constants.Numbers;
@@ -30,7 +34,6 @@ import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.interfaces.PostScorer;
-import structure.interfaces.Scorable;
 import structure.interfaces.Scorer;
 import structure.utils.Loggable;
 import structure.utils.Stopwatch;
@@ -38,16 +41,13 @@ import structure.utils.Stopwatch;
 public class Disambiguator implements Loggable {
 	private final long sleeptime = 100l;
 	private final HashSet<Mention> context = new HashSet<>();
-	private final EntitySimilarityService similarityService;
 
 	private final boolean IGNORE_DOUBLED_MENTIONS = true;
-
-	@SuppressWarnings("rawtypes")
-	private static final Set<Scorer<PossibleAssignment>> scorers = new HashSet<>();
-	@SuppressWarnings("rawtypes")
-	private static final Set<PostScorer<PossibleAssignment, Mention>> postScorers = new HashSet<>();
-	@SuppressWarnings("rawtypes")
-	private static ScoreCombiner<PossibleAssignment> combiner = null;
+	private final EntitySimilarityService similarityService;
+	private final Set<Scorer<PossibleAssignment>> scorers = new HashSet<>();
+	private final Set<PostScorer<PossibleAssignment, Mention>> postScorers = new HashSet<>();
+	// Determines how everything is scored!
+	private final ScoreCombiner<PossibleAssignment> combiner = new ScoreCombiner<PossibleAssignment>();
 
 	/**
 	 * Default setting constructor for a defined knowledge graph
@@ -62,9 +62,6 @@ public class Disambiguator implements Loggable {
 	public Disambiguator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode) throws IOException {
 		final CombineOperation combineOperation = CombineOperation.MAX_SIM;
 
-		// Determines how everything is scored!
-		setScoreCombiner(new ScoreCombiner<PossibleAssignment>());
-
 		// Pre-Scoring
 		// Add PR Scoring and get PRLoader for other scoring mechanisms
 		final PageRankLoader pagerankLoader = setupPageRankScoring(KG);
@@ -72,7 +69,6 @@ public class Disambiguator implements Loggable {
 		// Post-scoring
 		// PossibleAssignment.addPostScorer(new VicinityScorer());
 
-		this.similarityService = setupSimilarityService(KG, embeddingMode);
 //		int displayCounter = 0;
 //		for (Entry<String, List<Number>> e : entityEmbeddingsMap.entrySet()) {
 //			System.out.println(e.getKey());
@@ -83,9 +79,17 @@ public class Disambiguator implements Loggable {
 //			}
 //		}
 
-		addPostScorer(new GraphWalkEmbeddingScorer(new ContinuousHillClimbingPicker(
-				// combineOperation.combineOperation,
-				similarityService, pagerankLoader)));
+		addPostScorer(new VicinityScorerDirectedSparseGraph(KG));
+
+		
+		final boolean doEmbeddings = false;
+		if (doEmbeddings) {
+			this.similarityService = setupSimilarityService(KG, embeddingMode);
+			addPostScorer(new GraphWalkEmbeddingScorer(new ContinuousHillClimbingPicker(
+					combineOperation.combineOperation, similarityService, pagerankLoader)));
+		} else {
+			this.similarityService = null;
+		}
 
 		for (PostScorer postScorer : getPostScorers()) {
 			// Links a context object which will be updated when necessary through
@@ -197,12 +201,13 @@ public class Disambiguator implements Loggable {
 		final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors
 				.newFixedThreadPool(Numbers.SCORER_THREAD_AMT.val.intValue());
 		final AtomicInteger doneCounter = new AtomicInteger(0);
-		for (Scorable assgnmt : possAssignments) {
+		for (PossibleAssignment assgnmt : possAssignments) {
 			// Multi thread here
 			final Future<Integer> future = executor.submit(new Callable<Integer>() {
 				@Override
 				public Integer call() throws Exception {
-					assgnmt.computeScore();
+					final Number score = computeScore(assgnmt);
+					assgnmt.setScore(score);
 					return doneCounter.incrementAndGet();
 				}
 			});
@@ -238,43 +243,81 @@ public class Disambiguator implements Loggable {
 		}
 	}
 
-	public EntitySimilarityService getSimilarityService() {
-		return this.similarityService;
-	}
-
 	/**
 	 * Adds a scorer for disambiguation
 	 * 
 	 * @param scorer
 	 */
-	public static void addScorer(@SuppressWarnings("rawtypes") final Scorer<PossibleAssignment> scorer) {
+	public void addScorer(@SuppressWarnings("rawtypes") final Scorer<PossibleAssignment> scorer) {
 		scorers.add(scorer);
 	}
 
-	public static void addPostScorer(
-			@SuppressWarnings("rawtypes") final PostScorer<PossibleAssignment, Mention> scorer) {
+	public void addPostScorer(@SuppressWarnings("rawtypes") final PostScorer<PossibleAssignment, Mention> scorer) {
 		postScorers.add(scorer);
 	}
 
-	public static Set<Scorer<PossibleAssignment>> getScorers() {
+	public Set<Scorer<PossibleAssignment>> getScorers() {
 		return scorers;
 	}
 
-	public static Set<PostScorer<PossibleAssignment, Mention>> getPostScorers() {
+	public Set<PostScorer<PossibleAssignment, Mention>> getPostScorers() {
 		return postScorers;
 	}
 
-	public static void setScoreCombiner(
-			@SuppressWarnings("rawtypes") final ScoreCombiner<PossibleAssignment> combiner) {
-		Disambiguator.combiner = combiner;
-	}
-
-	public static ScoreCombiner<PossibleAssignment> getScoreCombiner() {
+	public ScoreCombiner<PossibleAssignment> getScoreCombiner() {
 		return combiner;
 	}
 
 	private void clearContext() {
 		this.context.clear();
+	}
+
+	/**
+	 * Computes the score for this possible assignment
+	 */
+	public Number computeScore(final PossibleAssignment assgnmt) {
+		Number currScore = null;
+		// Goes through all the scorers that have been defined and combines them in the
+		// wanted manner
+		// Pre-scoring step
+		for (@SuppressWarnings("rawtypes")
+		Scorer<PossibleAssignment> scorer : getScorers()) {
+			currScore = getScoreCombiner().combine(currScore, scorer, assgnmt);
+		}
+		// Post-scoring step
+		for (@SuppressWarnings("rawtypes")
+		PostScorer<PossibleAssignment, Mention> scorer : getPostScorers()) {
+			currScore = getScoreCombiner().combine(currScore, scorer, assgnmt);
+		}
+		return currScore;
+	}
+
+	private void displaySimilarities(final EnumModelType KG, List<Mention> mentions) {
+		if (this.similarityService == null) {
+			System.err.println("No similarity service defined.");
+			return;
+		}
+		// Get all similarities
+		for (int i = 0; i < mentions.size(); ++i) {
+			for (int j = i + 1; j < mentions.size(); ++j) {
+				if (mentions.get(i).getMention().equals(mentions.get(j).getMention())) {
+					continue;
+				}
+				List<String> targets = Lists.newArrayList();
+				for (PossibleAssignment ass : mentions.get(j).getPossibleAssignments()) {
+					targets.add(ass.getAssignment());
+				}
+
+				System.out.println("Mention:" + mentions.get(i) + "->" + mentions.get(j));
+				for (PossibleAssignment ass : mentions.get(i).getPossibleAssignments()) {
+					// Sorted similarities
+					final List<Pair<String, Double>> similarities = this.similarityService.computeSortedSimilarities(
+							ass.getAssignment(), targets, Comparators.pairRightComparator.reversed());
+					System.out.println("Source:" + ass);
+					System.out.println(similarities.subList(0, Math.min(5, similarities.size())));
+				}
+			}
+		}
 	}
 
 }

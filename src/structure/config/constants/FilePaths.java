@@ -297,10 +297,6 @@ public enum FilePaths {
 					init((initKG.root.endsWith("/") ? initKG.root : initKG.root + "/") + path, initFile);
 				}
 				break;
-			case CRUNCHBASE:
-			case DBPEDIA:
-			case FREEBASE:
-			case MAG:
 			default:
 				init((KG.root.endsWith("/") ? KG.root : KG.root + "/") + path, initFile);
 				break;

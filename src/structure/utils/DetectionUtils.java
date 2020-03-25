@@ -11,9 +11,9 @@ import org.apache.log4j.Logger;
 
 import linking.mentiondetection.InputProcessor;
 import linking.mentiondetection.StopwordsLoader;
+import linking.mentiondetection.exact.HashMapCaseInsensitive;
 import linking.mentiondetection.exact.MentionDetectorMap;
 import linking.mentiondetection.fuzzy.MentionDetectorLSH;
-import preprocessing.loader.MentionPossibilityLoader;
 import structure.config.constants.FilePaths;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
@@ -34,19 +34,26 @@ public class DetectionUtils {
 	 */
 	public static Map<String, Collection<String>> loadSurfaceForms(final EnumModelType KG,
 			final StopwordsLoader stopwordsLoader) throws IOException {
-		final MentionPossibilityLoader mpl = new MentionPossibilityLoader(KG, stopwordsLoader);
+
+		final MentionPossibilityLoader mpl;
+		if (stopwordsLoader == null) {
+			mpl = new MentionPossibilityLoader(KG);
+		} else {
+			mpl = new MentionPossibilityLoader(KG, stopwordsLoader);
+		}
 		Map<String, Collection<String>> map = mpl.exec(new File(FilePaths.FILE_ENTITY_SURFACEFORM_LINKING.getPath(KG)));
 		return map;
 	}
 
-	public static MentionDetector setupMentionDetection(final EnumModelType KG, final Map<String, Collection<String>> map,
-			final InputProcessor inputProcessor) throws Exception {
+	public static MentionDetector setupMentionDetection(final EnumModelType KG,
+			final Map<String, Collection<String>> map, final InputProcessor inputProcessor) throws Exception {
 		return setupMentionDetection(KG, map, inputProcessor, false);
-		//return setupMentionDetection(KG, map, inputProcessor, true);
+		// return setupMentionDetection(KG, map, inputProcessor, true);
 	}
 
-	public static MentionDetector setupMentionDetection(final EnumModelType KG, final Map<String, Collection<String>> map,
-			final InputProcessor inputProcessor, final boolean LSH_OR_MAP) throws Exception {
+	public static MentionDetector setupMentionDetection(final EnumModelType KG,
+			final Map<String, Collection<String>> map, final InputProcessor inputProcessor, final boolean LSH_OR_MAP)
+			throws Exception {
 		Logger.getLogger(DetectionUtils.class).info("Number of entries (aka. different surface forms): " + map.size());
 		// return new MentionDetectorMap(map);//
 		final MentionDetector md;
@@ -118,6 +125,16 @@ public class DetectionUtils {
 		currIndex.set(foundIndex + search.length());
 
 		return retLine;
+	}
+
+	public static Map<String, Collection<String>> makeCaseInsensitive(Map<String, Collection<String>> inMap) {
+		final Map<String, Collection<String>> map;
+		map = new HashMapCaseInsensitive<Collection<String>>();
+		// Case-insensitive map implementation
+		for (Map.Entry<String, Collection<String>> e : inMap.entrySet()) {
+			map.put(e.getKey(), e.getValue());
+		}
+		return map;
 	}
 
 }

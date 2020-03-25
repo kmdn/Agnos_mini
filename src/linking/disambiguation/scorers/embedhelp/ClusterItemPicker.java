@@ -10,7 +10,7 @@ import java.util.function.BiFunction;
 
 import com.beust.jcommander.internal.Lists;
 
-import preprocessing.loader.PageRankLoader;
+import linking.disambiguation.scorers.pagerank.PageRankLoader;
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.datatypes.pr.PageRankScore;

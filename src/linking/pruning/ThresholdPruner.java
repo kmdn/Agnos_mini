@@ -30,12 +30,13 @@ public class ThresholdPruner implements MentionPruner {
 	@Override
 	public List<Mention> prune(Collection<Mention> mentions) {
 		final List<Mention> retMentions = Lists.newArrayList();
-		double summedWeight = 0d;
-		for (Scorer<PossibleAssignment> scorer : Disambiguator.getScorers()) {
-			summedWeight += scorer.getWeight().doubleValue();
-		}
-
-		final double minThreshold = threshold * summedWeight;
+//		double summedWeight = 0d;
+//		for (Scorer<PossibleAssignment> scorer : Disambiguator.getScorers()) {
+//			summedWeight += scorer.getWeight().doubleValue();
+//		}
+//
+//		final double minThreshold = threshold * summedWeight;
+		final double minThreshold = threshold;
 		for (Mention mention : mentions) {
 			if (mention.getAssignment().getScore().doubleValue() >= minThreshold) {
 				retMentions.add(mention);

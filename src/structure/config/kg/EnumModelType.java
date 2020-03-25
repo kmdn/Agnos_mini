@@ -9,16 +9,16 @@ import structure.config.constants.Strings;
  *
  */
 public enum EnumModelType {
-	NONE("", null), //
-	DBPEDIA(Strings.ROOTPATH.val + "dbpedia/", EntityQuery.DEFAULT), //
+	//NONE("", null), //
+	//DBPEDIA(Strings.ROOTPATH.val + "dbpedia/", EntityQuery.DEFAULT), //
 	DBPEDIA_FULL(Strings.ROOTPATH.val + "dbpedia_full/", EntityQuery.DEFAULT, EnumConnection.SHETLAND_VIRTUOSO, false,
 			"http://dbpedia.org"), //
-	FREEBASE(Strings.ROOTPATH.val + "freebase/", EntityQuery.DEFAULT), //
+	//FREEBASE(Strings.ROOTPATH.val + "freebase/", EntityQuery.DEFAULT), //
 	CRUNCHBASE(Strings.ROOTPATH.val + "crunchbase2018/", EntityQuery.CRUNCHBASE2), //
-	CRUNCHBASE2(Strings.ROOTPATH.val + "crunchbase2015/", EntityQuery.CRUNCHBASE2), //
-	MINI_MAG(Strings.ROOTPATH.val + "mini_mag/", EntityQuery.MAG), //
-	MAG(Strings.ROOTPATH.val + "mag/", EntityQuery.MAG), //
-	DBLP(Strings.ROOTPATH.val + "dblp/", EntityQuery.DBLP), //
+	//CRUNCHBASE2(Strings.ROOTPATH.val + "crunchbase2015/", EntityQuery.CRUNCHBASE2), //
+	//MINI_MAG(Strings.ROOTPATH.val + "mini_mag/", EntityQuery.MAG), //
+	//MAG(Strings.ROOTPATH.val + "mag/", EntityQuery.MAG), //
+	//DBLP(Strings.ROOTPATH.val + "dblp/", EntityQuery.DBLP), //
 	WIKIDATA(Strings.ROOTPATH.val + "wikidata/", EntityQuery.WIKIDATA),//
 	DEFAULT(Strings.ROOTPATH.val + "/", EntityQuery.DEFAULT) //
 	;
@@ -57,6 +57,10 @@ public enum EnumModelType {
 
 	@Override
 	public String toString() {
+		return name();
+	}
+
+	public String findableName() {
 		return name();
 	}
 

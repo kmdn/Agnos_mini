@@ -1,4 +1,4 @@
-package preprocessing.loader;
+package linking.disambiguation.scorers.pagerank;
 
 import java.io.BufferedReader;
 import java.io.File;

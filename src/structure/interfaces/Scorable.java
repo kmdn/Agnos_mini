@@ -11,5 +11,5 @@ public interface Scorable {
 	 * Compute the score this scorable object should receive
 	 * @return score
 	 */
-	public Number computeScore();
+	public void setScore(final Number score);
 }

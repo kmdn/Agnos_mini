@@ -22,7 +22,6 @@ import org.aksw.gerbil.transfer.nif.TurtleNIFDocumentCreator;
 import org.aksw.gerbil.transfer.nif.TurtleNIFDocumentParser;
 import org.aksw.gerbil.transfer.nif.data.ScoredNamedEntity;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.beust.jcommander.internal.Lists;
 
@@ -36,7 +35,6 @@ import structure.config.constants.Comparators;
 import structure.config.constants.EnumEmbeddingMode;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
-import structure.datatypes.PossibleAssignment;
 import structure.interfaces.CandidateGenerator;
 import structure.interfaces.Executable;
 import structure.interfaces.MentionDetector;
@@ -50,7 +48,7 @@ import structure.utils.TextUtils;
  * @author Kristian Noullet
  *
  */
-public class GERBILAPIAnnotator implements Executable {
+public class NIFAPIAnnotator implements Executable {
 
 	private final EnumModelType KG;
 
@@ -75,11 +73,11 @@ public class GERBILAPIAnnotator implements Executable {
 	private MentionPruner pruner = null;
 	private final EnumEmbeddingMode embeddingMode;
 
-	public GERBILAPIAnnotator(final EnumModelType KG) {
+	public NIFAPIAnnotator(final EnumModelType KG) {
 		this(KG, EnumEmbeddingMode.DEFAULT.val);
 	}
 
-	public GERBILAPIAnnotator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode) {
+	public NIFAPIAnnotator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode) {
 		this.KG = KG;
 		this.embeddingMode = embeddingMode;
 	}
@@ -434,31 +432,6 @@ public class GERBILAPIAnnotator implements Executable {
 		}
 
 		return mentions;
-	}
-
-	private void displaySimilarities(List<Mention> mentions) {
-		// Get all similarities
-		for (int i = 0; i < mentions.size(); ++i) {
-			for (int j = i + 1; j < mentions.size(); ++j) {
-				if (mentions.get(i).getMention().equals(mentions.get(j).getMention())) {
-					continue;
-				}
-				List<String> targets = Lists.newArrayList();
-				for (PossibleAssignment ass : mentions.get(j).getPossibleAssignments()) {
-					targets.add(ass.getAssignment());
-				}
-
-				System.out.println("Mention:" + mentions.get(i) + "->" + mentions.get(j));
-				for (PossibleAssignment ass : mentions.get(i).getPossibleAssignments()) {
-					// Sorted similarities
-					final List<Pair<String, Double>> similarities = this.disambiguator.getSimilarityService()
-							.computeSortedSimilarities(ass.getAssignment(), targets,
-									Comparators.pairRightComparator.reversed());
-					System.out.println("Source:" + ass);
-					System.out.println(similarities.subList(0, Math.min(5, similarities.size())));
-				}
-			}
-		}
 	}
 
 	/**

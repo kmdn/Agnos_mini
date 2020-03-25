@@ -14,7 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
 
 import linking.disambiguation.scorers.embedhelp.EntitySimilarityService;
-import preprocessing.loader.PageRankLoader;
+import linking.disambiguation.scorers.pagerank.PageRankLoader;
 import structure.config.constants.Comparators;
 import structure.datatypes.Mention;
 import structure.utils.MentionUtils;

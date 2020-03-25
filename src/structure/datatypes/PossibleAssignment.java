@@ -45,28 +45,6 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 		return assignment;
 	}
 
-	/**
-	 * Computes the score for this possible assignment
-	 */
-	@Override
-	public Number computeScore() {
-		Number currScore = null;
-		// Goes through all the scorers that have been defined and combines them in the
-		// wanted manner
-		// Pre-scoring step
-		for (@SuppressWarnings("rawtypes")
-		Scorer<PossibleAssignment> scorer : Disambiguator.getScorers()) {
-			currScore = Disambiguator.getScoreCombiner().combine(currScore, scorer, this);
-		}
-		// Post-scoring step
-		for (@SuppressWarnings("rawtypes")
-		PostScorer<PossibleAssignment, Mention> scorer : Disambiguator.getPostScorers()) {
-			currScore = Disambiguator.getScoreCombiner().combine(currScore, scorer, this);
-		}
-		this.score = currScore;
-		computedScore = true;
-		return currScore;
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -99,5 +77,11 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 
 	public String getMentionToken() {
 		return mentionToken;
+	}
+	
+	public void setScore(final Number score)
+	{
+		this.score = score;
+		computedScore = true;
 	}
 }
