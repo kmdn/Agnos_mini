@@ -79,23 +79,32 @@ public class JSONAPIAnnotator implements Executable {
 	private final String outFilepath = "/vol2/kris/api_agnos.log";
 
 	public JSONAPIAnnotator() {
-		log("Constructor1");
-		for (EnumModelType KG : EnumModelType.values()) {
-			this.KGs.put(KG.name(), KG);
+		this(EnumEmbeddingMode.DEFAULT.val, EnumModelType.values());
+	}
+
+	public JSONAPIAnnotator(final EnumModelType... KG) {
+		this(EnumEmbeddingMode.DEFAULT.val, KG);
+	}
+
+	public JSONAPIAnnotator(final EnumEmbeddingMode embeddingMode, final EnumModelType... KGs) {
+		if (KGs != null && KGs.length > 0) {
+			for (EnumModelType KG : KGs) {
+				log("Constructor2(" + KG.name() + ")");
+				addKG(KG);
+			}
 		}
-		this.embeddingMode = EnumEmbeddingMode.DEFAULT;
-		// this(KG, EnumEmbeddingMode.DEFAULT.val);
-	}
-
-	public JSONAPIAnnotator(final EnumModelType KG) {
-		this(KG, EnumEmbeddingMode.DEFAULT.val);
-	}
-
-	public JSONAPIAnnotator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode) {
-		log("Constructor2(" + KG.name() + ")");
-		this.KGs.put(KG.name(), KG);
 		this.embeddingMode = embeddingMode;
+		addKG("wd", EnumModelType.WIKIDATA);
+		addKG("dbp", EnumModelType.DBPEDIA_FULL);
+	}
 
+	private void addKG(EnumModelType KG) {
+		this.KGs.put(KG.name(), KG);
+	}
+
+	private void addKG(final String key, EnumModelType KG) {
+		this.KGs.remove(KG.name());
+		this.KGs.put(key, KG);
 	}
 
 	@Override
@@ -136,7 +145,13 @@ public class JSONAPIAnnotator implements Executable {
 			// Initialise AssignmentChooser
 			Stopwatch.start(chooserWatch);
 
-			this.disambiguatorMap.put(KG.name(), new Disambiguator(KG, this.embeddingMode));
+			final Set<String> wantedResources = new HashSet<>();
+			for (Map.Entry<String, Collection<String>> e : map.entrySet()) {
+				wantedResources.addAll(e.getValue());
+			}
+
+			final Disambiguator disambiguator = new Disambiguator(KG, this.embeddingMode, wantedResources);
+			this.disambiguatorMap.put(KG.name(), disambiguator);
 			Stopwatch.endOutput(chooserWatch);
 			this.prunerMap.put(KG.name(), new ThresholdPruner(1.0d));
 			// Add that it was initialised
@@ -164,6 +179,7 @@ public class JSONAPIAnnotator implements Executable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println(string);
 	}
 
 	/**
@@ -346,9 +362,15 @@ public class JSONAPIAnnotator implements Executable {
 		EnumModelType KG = null;
 		try {
 			KG = EnumModelType.valueOf(chosenKG);
+			return KG;
 		} catch (IllegalArgumentException iae) {
 			KG = null;
 		}
+
+		if ((KG = this.KGs.get(chosenKG)) != null) {
+			return KG;
+		}
+
 		if (KG == null) {
 			for (EnumModelType kg : EnumModelType.values()) {
 				if (kg.findableName().toLowerCase().contains(chosenKG.toLowerCase())) {

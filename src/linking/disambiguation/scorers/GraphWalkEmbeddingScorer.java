@@ -50,12 +50,17 @@ public class GraphWalkEmbeddingScorer implements PostScorer<PossibleAssignment, 
 	 */
 	public static Map<String, List<Number>> humanload(final String mappingInPath, final String embeddingInPath)
 			throws IOException {
+		return humanload(mappingInPath, embeddingInPath, null);
+	}
+
+	public static Map<String, List<Number>> humanload(final String mappingInPath, final String embeddingInPath,
+			final Set<String> wantedEntities) throws IOException {
 		IDMappingLoader<String> entityMapping = new IDMappingLoader<String>().loadHumanFile(new File(mappingInPath));
 		final File embedFile = new File(embeddingInPath);
 		log().info("Loading embeddings from: " + embedFile.getAbsolutePath());
 		Stopwatch.start(GraphWalkEmbeddingScorer.class.getName());
 		final Map<String, List<Number>> entityEmbeddingsMap = EmbeddingsUtils.readEmbeddings(embedFile, entityMapping,
-				true);
+				true, wantedEntities);
 		log().info("Finished(" + Stopwatch.endOutput(GraphWalkEmbeddingScorer.class.getName())
 				+ " ms.) loading embeddings from: " + embedFile.getAbsolutePath());
 		entityMapping = null;

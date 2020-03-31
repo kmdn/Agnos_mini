@@ -56,10 +56,19 @@ public class Disambiguator implements Loggable {
 	 * @throws IOException
 	 */
 	public Disambiguator(final EnumModelType KG) throws IOException {
-		this(KG, EnumEmbeddingMode.DEFAULT);
+		this(KG, (Set<String>) null);
+	}
+
+	public Disambiguator(final EnumModelType KG, final Set<String> wantedEntities) throws IOException {
+		this(KG, EnumEmbeddingMode.DEFAULT, wantedEntities);
 	}
 
 	public Disambiguator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode) throws IOException {
+		this(KG, embeddingMode, null);
+	}
+
+	public Disambiguator(final EnumModelType KG, final EnumEmbeddingMode embeddingMode,
+			final Set<String> wantedEntities) throws IOException {
 		final CombineOperation combineOperation = CombineOperation.MAX_SIM;
 
 		// Pre-Scoring
@@ -79,12 +88,13 @@ public class Disambiguator implements Loggable {
 //			}
 //		}
 
+		System.out.println("Added VicinityScorerDirectedSparseGraph");
 		addPostScorer(new VicinityScorerDirectedSparseGraph(KG));
 
-		
-		final boolean doEmbeddings = false;
+		final boolean doEmbeddings = true;
 		if (doEmbeddings) {
-			this.similarityService = setupSimilarityService(KG, embeddingMode);
+			System.out.println("Added GraphWalkEmbeddingScorer " + "[" + KG.name() + "]");
+			this.similarityService = setupSimilarityService(KG, embeddingMode, wantedEntities);
 			addPostScorer(new GraphWalkEmbeddingScorer(new ContinuousHillClimbingPicker(
 					combineOperation.combineOperation, similarityService, pagerankLoader)));
 		} else {
@@ -98,13 +108,13 @@ public class Disambiguator implements Loggable {
 		}
 	}
 
-	private EntitySimilarityService setupSimilarityService(EnumModelType KG, final EnumEmbeddingMode embeddingMode)
-			throws IOException {
+	private EntitySimilarityService setupSimilarityService(EnumModelType KG, final EnumEmbeddingMode embeddingMode,
+			final Set<String> wantedEntities) throws IOException {
 		final Map<String, List<Number>> entityEmbeddingsMap;
 		if (embeddingMode == EnumEmbeddingMode.LOCAL) {
 			entityEmbeddingsMap = GraphWalkEmbeddingScorer.humanload(
 					FilePaths.FILE_GRAPH_WALK_ID_MAPPING_ENTITY_HUMAN.getPath(KG),
-					FilePaths.FILE_EMBEDDINGS_GRAPH_WALK_ENTITY_EMBEDDINGS.getPath(KG));
+					FilePaths.FILE_EMBEDDINGS_GRAPH_WALK_ENTITY_EMBEDDINGS.getPath(KG), wantedEntities);
 			return new EntitySimilarityService(entityEmbeddingsMap);
 		} else {
 			return new EntitySimilarityService();

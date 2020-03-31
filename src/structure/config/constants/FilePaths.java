@@ -132,6 +132,7 @@ public enum FilePaths {
 	FILE_NT_ENTITIES(DIR_DATA.path + "entities.nt", "NT File containing all entities"), //
 
 	// "Corrected" RDF Graph files
+	FILE_KNOWLEDGE_GRAPH(DIR_DATA.path + "kg.nt"), //
 	FILE_GRAPH_RDF(DIR_DATA.path + "rdf.ttl"), //
 	FILE_GRAPH_RDF_TYPES(DIR_DATA.path + "types.ttl"), //
 	// Extended TXT graph file

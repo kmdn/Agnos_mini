@@ -49,6 +49,7 @@ public class ContinuousHillClimbingPicker extends HillClimbingPicker {
 		super.prune = false;
 		int iterationCounter = 0;
 		final List<Mention> copyContext = Lists.newArrayList(this.context);
+		System.out.println(getClass().getName()+" - Mentions["+copyContext+"]");
 		// Sorts them for the sake of initialisation picking based on word order
 		Collections.sort(copyContext, Comparators.mentionOffsetComparator);
 		// Computing clusters outside, so we don't have to redo it every time
@@ -60,6 +61,7 @@ public class ContinuousHillClimbingPicker extends HillClimbingPicker {
 		final Map<String, List<MutablePair<String, Double>>> continuousChoices = new HashMap<>();
 		while (copyContext.size() > 1 && clusters.size() > 1) {
 			// Do the picking logic
+			System.out.println("Displaying (valid) clusters: "+displayMap(clusters, 10));
 			final Map<String, Pair<String, Double>> iterationChoices = super.pickItems(clusters);
 
 			// If no item has been picked, there is no need to continue... -> jump out

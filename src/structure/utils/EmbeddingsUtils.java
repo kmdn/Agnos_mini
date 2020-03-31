@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.apache.log4j.Logger;
@@ -31,17 +32,17 @@ public class EmbeddingsUtils {
 	 */
 	public static Map<String, List<Number>> readEmbeddings(final File intputFile)
 			throws FileNotFoundException, IOException {
-		return readEmbeddings(intputFile, null, true);
+		return readEmbeddings(intputFile, null, true, null);
 	}
 
 	public static Map<String, List<Number>> readEmbeddings(final File intputFile,
-			final IDMappingLoader<String> mappingLoader, final boolean normalize)
+			final IDMappingLoader<String> mappingLoader, final boolean normalize, final Set<String> wantedEntities)
 			throws FileNotFoundException, IOException {
 		final String delim = Strings.EMBEDDINGS_TRAINED_DELIM.val;
 //		final boolean stripArrows = false;
 		// final String delim = " ";
 		final boolean stripArrows = true;
-		return readEmbeddings(intputFile, mappingLoader, normalize, delim, stripArrows);
+		return readEmbeddings(intputFile, mappingLoader, normalize, delim, stripArrows, wantedEntities);
 	}
 
 	/**
@@ -50,11 +51,14 @@ public class EmbeddingsUtils {
 	 * <b>Note</b>: If a vocabulary word appears multiple times, the latter will
 	 * replace the existing one
 	 * 
-	 * @param intputFile    input file containing embeddings
-	 * @param mappingLoader NULLABLE; used IDMappingLoader (if applicable)
-	 * @param normalize     whether to normalize the embeddings vectors
-	 * @param delim         what delimiter was used to output the embeddings
-	 * @param stripArrows   whether to strip arrows from the entity
+	 * @param intputFile     input file containing embeddings
+	 * @param mappingLoader  NULLABLE; used IDMappingLoader (if applicable)
+	 * @param normalize      whether to normalize the embeddings vectors
+	 * @param delim          what delimiter was used to output the embeddings
+	 * @param stripArrows    whether to strip arrows from the entity
+	 * @param wantedEntities NULLABLE; allows for lazy-loading of embeddings (useful
+	 *                       for particularly large embeddings files and when
+	 *                       changes to MD are being done)
 	 * @return populated embeddings map
 	 * @throws FileNotFoundException if file was not found
 	 * @throws IOException           if any IO exception happens, most likely due to
@@ -62,15 +66,17 @@ public class EmbeddingsUtils {
 	 */
 	public static Map<String, List<Number>> readEmbeddings(final File intputFile,
 			final IDMappingLoader<String> mappingLoader, final boolean normalize, final String delim,
-			final boolean stripArrows) throws FileNotFoundException, IOException {
+			final boolean stripArrows, final Set<String> wantedEntities) throws FileNotFoundException, IOException {
+		System.out.println("Wanted Entities: " + (wantedEntities == null ? "null" : wantedEntities.size()));
 		// Embeddings format: vocabularyWord <delim> List<Double>
 		final Map<String, List<Number>> embeddings = new HashMap<>();
-		int lineCounter = 0;
+		int lineCounter = 0, loadedCounter = 0;
 		String line = null;
 		try (final BufferedReader brIn = new BufferedReader(new FileReader(intputFile))) {
 			while ((line = brIn.readLine()) != null) {
 				if (lineCounter % 100_000 == 0) {
-					System.out.println("# of embeddings: " + lineCounter);
+					System.out
+							.println("# of embeddings: Loaded[" + loadedCounter + "] / Traversed[" + lineCounter + "]");
 					System.out.println("Current: " + line.substring(0, 100));
 				}
 				lineCounter++;
@@ -78,6 +84,7 @@ public class EmbeddingsUtils {
 				// Word \t 1.23123 \t 2.1421421 ...
 				final String[] tokens = line.split(delim);
 				String vocab = tokens[0];
+				// If it's an ID and needs to translate to a resource
 				if (mappingLoader != null && !mappingLoader.isEmpty()) {
 					final String associatedWord = mappingLoader.getMapping(vocab);
 					if (associatedWord != null) {
@@ -85,6 +92,15 @@ public class EmbeddingsUtils {
 					}
 				}
 
+				// Lazy loading component - only load it if it can be detected through mentions
+				if (wantedEntities != null && wantedEntities.size() > 0) {
+					if (!wantedEntities.contains(vocab)) {
+						// Not within our set, so skip it
+						continue;
+					}
+				}
+
+				// Strips < and > from token
 				if (stripArrows) {
 					final int endOffset = vocab.length() - 1;
 					if ((vocab.charAt(0) == '<') && (vocab.charAt(endOffset) == '>') && endOffset > 1) {
@@ -107,6 +123,7 @@ public class EmbeddingsUtils {
 					embedding = normalize(embedding);
 				}
 				embeddings.put(vocab, embedding);
+				loadedCounter++;
 				embedding = null;
 			}
 		}

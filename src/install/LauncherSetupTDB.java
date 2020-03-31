@@ -38,11 +38,14 @@ public class LauncherSetupTDB implements Loggable {
 		// DBPEDIA
 		// CRUNCHBASE2
 		// MAG
-		CRUNCHBASE;
+		// CRUNCHBASE
+		DEFAULT
+		;
 		// DBPEDIA_FULL
 		// WIKIDATA;
-		System.out.println("Setting up TDB for: " + KG.name());
-		final String KGpath = "";
+		System.out.println("Setting up TDB for KG[" + KG.name()+"]");
+		final String KGpath = FilePaths.FILE_KNOWLEDGE_GRAPH.getPath(KG);
+				//"";
 				// "/vol2/cb/crunchbase-201510/dumps/crunchbase-dump-201510.nt";//CB2015
 				//"/vol2/cb/crunchbase-201806/dumps/crunchbase-dump-2018-06_sanitized.nt";// CB2018
 				// "./cb2018-06/crunchbase-dump-2018-06.nt";//NORMALIZED_CB2
@@ -94,9 +97,10 @@ public class LauncherSetupTDB implements Loggable {
 		// Choose for which KG to load it into the TDB
 		// final EnumModelType KG = EnumModelType.MAG;
 		for (EnumModelType KG : EnumModelType.values()) {
-			final String KGpath = FilePaths.FILE_EXTENDED_GRAPH.getPath(KG);
+			final String KGpath = FilePaths.FILE_KNOWLEDGE_GRAPH.getPath(KG);
 			// Read a line to make sure it is not an empty file we are trying to load
 			try (BufferedReader br = new BufferedReader(new FileReader(KGpath))) {
+				// Read first line to check whether it's an empty file!
 				if (br.readLine() == null) {
 					// Skip this file if it's empty
 					getLogger().info("Skipping " + KG.name() + " due to empty file.");
@@ -118,7 +122,7 @@ public class LauncherSetupTDB implements Loggable {
 	 * @param KG     which graph it corresponds to
 	 * @param KGpath where to load it from
 	 */
-	private void exec(EnumModelType KG, final String KGpath) {
+	public void exec(EnumModelType KG, final String KGpath) {
 		final String datasetPath = FilePaths.DATASET.getPath(KG);
 		// Non-empty file
 		final Dataset dataset = TDBFactory.createDataset(datasetPath);

@@ -118,8 +118,10 @@ public abstract class LiteralEntityQuery {
 			}
 			// Output to query results
 			outputMainChannel(varName, value, itVars.hasNext(), writers.get(0));
-			// Output to query linking when appropriate
-			outputAlternateChannels(varName, value, itVars.hasNext(), writers.subList(1, writers.size()));
+			if (writers.size() > 1) {
+				// Output to query linking when appropriate
+				outputAlternateChannels(varName, value, itVars.hasNext(), writers.subList(1, writers.size()));
+			}
 		}
 	}
 
