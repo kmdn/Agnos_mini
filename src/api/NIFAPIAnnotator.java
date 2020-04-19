@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.beust.jcommander.internal.Lists;
 
 import linking.candidategeneration.CandidateGeneratorMap;
-import linking.disambiguation.Disambiguator;
+import linking.disambiguation.DisambiguatorAgnos;
 import linking.mentiondetection.InputProcessor;
 import linking.mentiondetection.StopwordsLoader;
 import linking.pruning.MentionPruner;
@@ -69,7 +69,7 @@ public class NIFAPIAnnotator implements Executable {
 	private Set<String> stopwords = null;
 	private MentionDetector md = null;
 	private CandidateGenerator candidateGenerator = null;
-	private Disambiguator disambiguator = null;
+	private DisambiguatorAgnos disambiguator = null;
 	private MentionPruner pruner = null;
 	private final EnumEmbeddingMode embeddingMode;
 
@@ -111,7 +111,7 @@ public class NIFAPIAnnotator implements Executable {
 			// Initialise AssignmentChooser
 			Stopwatch.start(chooserWatch);
 
-			this.disambiguator = new Disambiguator(this.KG, this.embeddingMode);
+			this.disambiguator = new DisambiguatorAgnos(this.KG, this.embeddingMode);
 			Stopwatch.endOutput(chooserWatch);
 			this.pruner = new ThresholdPruner(1.0d);
 			init = true;

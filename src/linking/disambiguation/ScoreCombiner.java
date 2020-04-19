@@ -2,7 +2,8 @@ package linking.disambiguation;
 
 import java.util.function.BiFunction;
 
-import structure.interfaces.Scorer;
+import structure.interfaces.Scorable;
+import structure.interfaces.Weighable;
 import structure.utils.Loggable;
 
 /**
@@ -13,17 +14,18 @@ import structure.utils.Loggable;
  *
  * @param <T> what type the scorers are working with
  */
-public class ScoreCombiner<T> implements Loggable {
-	public Number combine(final Number currScore, final Scorer<T> scorer, final T scorerParam) {
+public class ScoreCombiner<T extends Scorable> implements Loggable {
+	public Number combine(final Number currScore, final Number nextScore, final Weighable<T> scorer,
+			final T scorerParam) {
 		// Add all types of scorers here with the appropriate weights
-		final Number score = scorer.computeScore(scorerParam);
+		//final Number score = scorer.computeScore(scorerParam);
 		final Number weight = scorer.getWeight();
+		final BiFunction<Number, T, Number> func = scorer.getScoreModulationFunction();
+		final Number modulatedVal = func == null ? nextScore : func.apply(nextScore, scorerParam).doubleValue();
+		return add(currScore, weight.doubleValue() * modulatedVal.doubleValue());
 		// Generally not needed, but PR unfortunately can have some extremely high
 		// values by comparison and as such requires some smoothing (e.g. through
 		// sqrt())
-		final BiFunction<Number, T, Number> func = scorer.getScoreModulationFunction();
-		final Number modulatedVal = func == null ? score : func.apply(score, scorerParam).doubleValue();
-		return add(currScore, weight.doubleValue() * modulatedVal.doubleValue());
 //		if (scorer instanceof PageRankScorer) {
 //			// Pretty much just sets the weight
 //			final Double prScore = Numbers.PAGERANK_WEIGHT.val.doubleValue()

@@ -9,13 +9,13 @@ import java.util.List;
 import structure.utils.Loggable;
 
 public class Mention implements Loggable {
-	private String mention = null;
-	private PossibleAssignment assignment = null;
-	private int offset = -1;
-	private double detectionConfidence = -1;
-	private Collection<PossibleAssignment> possibleAssignments = null;
-	private final String originalMention;
-	private final String originalWithoutStopwords;
+	protected String mention = null;
+	protected PossibleAssignment assignment = null;
+	protected int offset = -1;
+	protected double detectionConfidence = -1;
+	protected Collection<PossibleAssignment> possibleAssignments = null;
+	protected final String originalMention;
+	protected final String originalWithoutStopwords;
 
 	public Mention(final String word, final PossibleAssignment assignment, final int offset,
 			final double detectionConfidence, final String originalMention, final String originalWithoutStopwords) {
@@ -27,14 +27,14 @@ public class Mention implements Loggable {
 		this.originalWithoutStopwords = originalWithoutStopwords;
 	}
 
-	Mention(final String word, final PossibleAssignment assignment, final int offset) {
+	public Mention(final String word, final PossibleAssignment assignment, final int offset) {
 		// -1 being as 'not set'
 		this(word, assignment, offset, -1, word, word);
 	}
 
 	@Override
 	public String toString() {
-		return getMention() + "/" + getOriginalMention() +"/" + getOriginalWithoutStopwords();
+		return "[" + getMention() + "/" + getOriginalMention() + "/" + getOriginalWithoutStopwords() + "]";
 	}
 
 	/**

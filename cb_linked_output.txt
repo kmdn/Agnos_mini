@@ -1,0 +1,12 @@
+Mention[Joan Baez; 0.0] 
+Original Text:Joan Baez
+Possible assignments: 1
+Found assignment: http://dbpedia.org/resource/Joan_Baez
+Found Assignment's Score: 0.0
+--------------------------------------------------
+Mention[Steve Jobs; 0.0] 
+Original Text:Steve Jobs
+Possible assignments: 1
+Found assignment: http://dbpedia.org/resource/Steve_Jobs
+Found Assignment's Score: 0.0
+--------------------------------------------------

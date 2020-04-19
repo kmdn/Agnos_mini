@@ -2,10 +2,7 @@ package structure.datatypes;
 
 import org.apache.log4j.Logger;
 
-import linking.disambiguation.Disambiguator;
-import structure.interfaces.PostScorer;
 import structure.interfaces.Scorable;
-import structure.interfaces.Scorer;
 import structure.utils.Loggable;
 
 /**
@@ -45,13 +42,13 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 		return assignment;
 	}
 
-
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof PossibleAssignment) {
 			@SuppressWarnings("rawtypes")
 			final PossibleAssignment ass = ((PossibleAssignment) obj);
-			return this.score.equals(ass.score) && this.assignment.equals(ass.assignment);
+			return this.score.equals(ass.score) && this.assignment.equals(ass.assignment)
+					&& this.mentionToken.equals(ass.mentionToken);
 		}
 		return super.equals(obj);
 	}
@@ -78,9 +75,8 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	public String getMentionToken() {
 		return mentionToken;
 	}
-	
-	public void setScore(final Number score)
-	{
+
+	public void setScore(final Number score) {
 		this.score = score;
 		computedScore = true;
 	}

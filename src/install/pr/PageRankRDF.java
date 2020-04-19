@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.graph.Triple;
@@ -13,13 +14,13 @@ import org.apache.jena.riot.lang.PipedRDFIterator;
 
 import com.beust.jcommander.internal.Lists;
 
+import linking.mentiondetection.exact.HashMapCaseInsensitive;
 import structure.datatypes.pr.PageRankScore;
 import structure.utils.Loggable;
 
 /**
  * 
- * @author WDAqua (https://github.com/WDAqua/PageRankRDF)
- * Modified by: wf7467
+ * @author WDAqua (https://github.com/WDAqua/PageRankRDF) Modified by: wf7467
  *
  */
 public class PageRankRDF implements Loggable {
@@ -69,8 +70,21 @@ public class PageRankRDF implements Loggable {
 	public void compute() {
 		getLogger().info("Computing pagerank for dumps:" + dumps);
 		// Compute the number of outgoing edges
-		final HashMap<String, Integer> numberOutgoing = new HashMap<>();
-		final HashMap<String, ArrayList<String>> incomingPerPage = new HashMap<String, ArrayList<String>>();
+		final Map<String, Integer> numberOutgoing;
+		
+		if (caseSensitive) {
+			numberOutgoing = new HashMap<>();
+		} else {
+			numberOutgoing = new HashMapCaseInsensitive<>();
+		}
+
+		final Map<String, ArrayList<String>> incomingPerPage;
+		if (caseSensitive) {
+			incomingPerPage = new HashMap<>();
+		} else {
+			incomingPerPage = new HashMapCaseInsensitive<>();
+		}
+		
 		long time = System.currentTimeMillis();
 		final long initTime = time;
 		for (String dump : this.dumps) {

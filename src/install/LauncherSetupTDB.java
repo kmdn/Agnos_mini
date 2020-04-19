@@ -38,31 +38,38 @@ public class LauncherSetupTDB implements Loggable {
 		// DBPEDIA
 		// CRUNCHBASE2
 		// MAG
-		// CRUNCHBASE
-		DEFAULT
-		;
+				CRUNCHBASE
+		// DEFAULT
 		// DBPEDIA_FULL
-		// WIKIDATA;
-		System.out.println("Setting up TDB for KG[" + KG.name()+"]");
-		final String KGpath = FilePaths.FILE_KNOWLEDGE_GRAPH.getPath(KG);
-				//"";
-				// "/vol2/cb/crunchbase-201510/dumps/crunchbase-dump-201510.nt";//CB2015
-				//"/vol2/cb/crunchbase-201806/dumps/crunchbase-dump-2018-06_sanitized.nt";// CB2018
-				// "./cb2018-06/crunchbase-dump-2018-06.nt";//NORMALIZED_CB2
-				// "/home/faerberm/inRDF-URI-as-obj/";// MAG
-				// "/vol2/kris/PaperReferences_o.nt";// MAG PaperReferences_o.nt
-				// "/vol2/dblp/dumps/dblp_2018-11-02_unique.nt";//DBLP
-				// "./dblp_kg/dblp_2018-11-02_unique.nt";//NORMALIZED_DBLP
-				// "/vol1/mag/data/2018-07-19/MAGFieldsOfStudyKG/MAGFieldsOfStudyKG.nt";//Mini-MAG
-				// "./crunchbase-dump-2018-06_normalized.nt";// normalized CB2
-				// "./dblp_2018-11-02_unique_normalized.nt";// normalized DBLP
-				// "/vol1/data_faerberm/kris/data_dbpedia_extracted";// DBpedia
-				// "/home/noulletk/prog/bmw/dbpedia/resources/data/datasets/extracted/";//
-				// DBpedia
-				// "/home/noulletk/prog/bmw/input_dbpedia/";// DBpedia
-				// Handle appropriately both for input file (just load it)
-				// and input directory (get all files within it, aka. ignore subdirectories)
-				//"/vol2/wikidata/dumps/20190213/wikidata-20190213-truthy-BETA_all_URI-obj.nt";
+		// WIKIDATA//
+		;
+		System.out.println("Setting up TDB for KG[" + KG.name() + "]");
+		final String KGpath =
+				// WIKIDATA
+				//"/vol2/wikidata/dumps/20190213/wikidata-20190213-truthy-BETA_all_URI-obj.nt"//
+				
+			"/vol2/cb/crunchbase-201806/dumps/crunchbase-dump-2018-06_sanitized.nt"
+		;
+		// final String KGpath = FilePaths.FILE_KNOWLEDGE_GRAPH.getPath(KG);//
+		// "";
+		// "/vol2/cb/crunchbase-201510/dumps/crunchbase-dump-201510.nt";//CB2015
+		// "/vol2/cb/crunchbase-201806/dumps/crunchbase-dump-2018-06_sanitized.nt";//
+		// CB2018
+		// "./cb2018-06/crunchbase-dump-2018-06.nt";//NORMALIZED_CB2
+		// "/home/faerberm/inRDF-URI-as-obj/";// MAG
+		// "/vol2/kris/PaperReferences_o.nt";// MAG PaperReferences_o.nt
+		// "/vol2/dblp/dumps/dblp_2018-11-02_unique.nt";//DBLP
+		// "./dblp_kg/dblp_2018-11-02_unique.nt";//NORMALIZED_DBLP
+		// "/vol1/mag/data/2018-07-19/MAGFieldsOfStudyKG/MAGFieldsOfStudyKG.nt";//Mini-MAG
+		// "./crunchbase-dump-2018-06_normalized.nt";// normalized CB2
+		// "./dblp_2018-11-02_unique_normalized.nt";// normalized DBLP
+		// "/vol1/data_faerberm/kris/data_dbpedia_extracted";// DBpedia
+		// "/home/noulletk/prog/bmw/dbpedia/resources/data/datasets/extracted/";//
+		// DBpedia
+		// "/home/noulletk/prog/bmw/input_dbpedia/";// DBpedia
+		// Handle appropriately both for input file (just load it)
+		// and input directory (get all files within it, aka. ignore subdirectories)
+		// "/vol2/wikidata/dumps/20190213/wikidata-20190213-truthy-BETA_all_URI-obj.nt";
 		final File inFile = new File(KGpath);
 		final List<String> inFiles = Lists.newArrayList();
 		if (inFile.isDirectory()) {

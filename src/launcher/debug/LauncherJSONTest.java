@@ -1,4 +1,4 @@
-package launcher;
+package launcher.debug;
 
 import org.json.JSONObject;
 
@@ -14,7 +14,7 @@ public class LauncherJSONTest {
 	private void run() {
 		final JSONObject jsonObj = new JSONObject(
 				"{\"topk\":false,\"input\":\"\",\"kg\":\"DBP\",\"fuzzy\":false,\"mentiondetection\":false}");
-		final EnumModelType KG = EnumModelType.DBPEDIA_FULL;
+		final EnumModelType KG = EnumModelType.DEFAULT;//DBPEDIA_FULL;
 		final JSONAPIAnnotator annotator = new JSONAPIAnnotator(KG);
 		annotator.init();
 

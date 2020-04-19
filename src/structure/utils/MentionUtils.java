@@ -11,10 +11,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.collect.Lists;
+
+import linking.disambiguation.scorers.embedhelp.EntitySimilarityService;
+import structure.config.constants.Comparators;
 import structure.config.constants.Strings;
+import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
+import structure.datatypes.PossibleAssignment;
 
 public class MentionUtils {
+
+	public static void displaySimilarities(final EntitySimilarityService similarityService, final EnumModelType KG,
+			List<Mention> mentions) {
+		if (similarityService == null) {
+			System.err.println("No similarity service defined.");
+			return;
+		}
+		// Get all similarities
+		for (int i = 0; i < mentions.size(); ++i) {
+			for (int j = i + 1; j < mentions.size(); ++j) {
+				if (mentions.get(i).getMention().equals(mentions.get(j).getMention())) {
+					continue;
+				}
+				List<String> targets = Lists.newArrayList();
+				for (PossibleAssignment ass : mentions.get(j).getPossibleAssignments()) {
+					targets.add(ass.getAssignment());
+				}
+
+				System.out.println("Mention:" + mentions.get(i) + "->" + mentions.get(j));
+				for (PossibleAssignment ass : mentions.get(i).getPossibleAssignments()) {
+					// Sorted similarities
+					final List<Pair<String, Double>> similarities = similarityService.computeSortedSimilarities(
+							ass.getAssignment(), targets, Comparators.pairRightComparator.reversed());
+					System.out.println("Source:" + ass);
+					System.out.println(similarities.subList(0, Math.min(5, similarities.size())));
+				}
+			}
+		}
+	}
 
 	/**
 	 * Removes mentions from passed list which were detected based on the passed

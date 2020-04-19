@@ -9,6 +9,6 @@ package structure.interfaces;
  * @param <T> scorer type
  * @param <M> context base type
  */
-public interface PostScorer<T, M> extends Scorer<T>, ContextBase<M> {
+public interface PostScorer<T extends Scorable, M> extends Scorer<T>, ContextBase<M> {
 
 }

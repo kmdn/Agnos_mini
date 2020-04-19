@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import linking.candidategeneration.CandidateGeneratorMap;
-import linking.disambiguation.Disambiguator;
+import linking.disambiguation.DisambiguatorAgnos;
 import linking.mentiondetection.InputProcessor;
 import linking.mentiondetection.exact.MentionDetectorMap;
 import structure.config.kg.EnumModelType;
@@ -27,12 +27,12 @@ public class LauncherLinkingSample {
 	}
 
 	private void run() throws InterruptedException, IOException {
-		final EnumModelType KG = EnumModelType.DBPEDIA_FULL;
+		final EnumModelType KG = EnumModelType.DEFAULT;//DBPEDIA_FULL;
 		final String input = "";
 		final HashMap<String, Collection<String>> surfaceFormLinks = new HashMap<>();
 		final MentionDetector md = new MentionDetectorMap(surfaceFormLinks, new InputProcessor(null));
 		final CandidateGenerator cg = new CandidateGeneratorMap(surfaceFormLinks);
-		final Disambiguator d = new Disambiguator(KG);
+		final DisambiguatorAgnos d = new DisambiguatorAgnos(KG);
 		final Collection<Mention> mentions = md.detect(input);
 		cg.generate(mentions);
 		d.disambiguate(mentions);

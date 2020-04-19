@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.beust.jcommander.internal.Lists;
 
-import linking.disambiguation.Disambiguator;
+import linking.disambiguation.DisambiguatorAgnos;
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.interfaces.Scorer;

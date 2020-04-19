@@ -1,5 +1,9 @@
-package launcher;
+package launcher.debug;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,50 +17,77 @@ import org.apache.jena.tdb.TDBFactory;
 import structure.config.constants.EnumConnection;
 import structure.config.constants.FilePaths;
 import structure.config.kg.EnumModelType;
+import structure.utils.FileUtils;
 import structure.utils.RDFUtils;
 import structure.utils.Stopwatch;
 
 public class LauncherTestQuery {
 
 	public static void main(String[] args) {
+		// Folder with queries to execute
+		final String inFolderPath = "./crunchbase_queries/";
 		final EnumModelType KG = EnumModelType.
-		// MAG
-		// DBPEDIA_FULL
-				WIKIDATA//
+		// MAG//
+		// DBPEDIA_FULL//
+				//WIKIDATA//
+				CRUNCHBASE//
 		;
 		System.out.println("Testing query for: " + KG.name());
 		Stopwatch.start(LauncherTestQuery.class.getName());
+		// Dataset
 		final Dataset dataset = TDBFactory.createDataset(FilePaths.DATASET.getPath(KG));
 		System.out.println("Finished loading!");
 		Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
-
+		// Model
 		final Model model = dataset.getDefaultModel();
+		try {
 //		final String queryStr = "select distinct ?s (CONCAT(CONCAT(?fname, \" \"), ?lname) AS ?o) where {\r\n"
 //				+ "?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ontologycentral.com/2010/05/cb/vocab#Person> .\r\n"
 //				+ "?s <http://ontologycentral.com/2010/05/cb/vocab#last_name> ?lname .\r\n"
 //				+ "?s <http://ontologycentral.com/2010/05/cb/vocab#first_name> ?fname .\r\n" + "}";
-		System.out.println("Executing query...");
-		getABC(model);
-		Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
-		// getObjectsFor(model, "http://dbpedia.org/resource/Smartphone");
-		// getObjectsForSubjectOfSFQuery(model,
-		// "http://dbpedia.org/resource/Smartphone");
-//		Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
-		// getPredicates(model);
-		// Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
-		// getTypes(model);
-		// Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
-		// getPredicatesGroupCounts(model);
-		// Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
-		// getRandom(model);
-		// testVirtuoso();
-		// getDBLPAuthors(model);
+			System.out.println("Executing query...");
 
-		model.close();
-		dataset.close();
-		// getSteveJobsConnections(model);
-		// getCrunchbaseNews(model);
-		// getPredicatesAndTypes(model);
+			final File inFolder = new File(inFolderPath);
+			if (!inFolder.isDirectory() || !inFolder.exists()) {
+				throw new FileNotFoundException("Could not find directory ["+inFolderPath+"]...");
+			}
+			File[] files = inFolder.listFiles();
+			PrintStream oldOut = System.out;
+			for (File file : files) {
+				final String queryStr = FileUtils.getContents(file);
+				try (final PrintStream fos = new PrintStream(
+						new FileOutputStream(new File(file.getName() + "_out"), false))) {
+					System.setOut(fos);
+				}
+				execQuery(model, queryStr);
+
+				Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
+			}
+			System.setOut(oldOut);
+			// getABC(model);
+			// getObjectsFor(model, "http://dbpedia.org/resource/Smartphone");
+			// getObjectsForSubjectOfSFQuery(model,
+			// "http://dbpedia.org/resource/Smartphone");
+//		Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
+			// getPredicates(model);
+			// Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
+			// getTypes(model);
+			// Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
+			// getPredicatesGroupCounts(model);
+			// Stopwatch.endOutputStart(LauncherTestQuery.class.getName());
+			// getRandom(model);
+			// testVirtuoso();
+			// getDBLPAuthors(model);
+			// getSteveJobsConnections(model);
+			// getCrunchbaseNews(model);
+			// getPredicatesAndTypes(model);
+		} catch (Exception e) {
+
+		} finally {
+			model.close();
+			dataset.close();
+		}
+
 		System.out.println("Finished!");
 		// "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 100"
 	}
@@ -428,7 +459,7 @@ public class LauncherTestQuery {
 	private static void displayQuery(ResultSet results) {
 		while (results.hasNext()) {
 			final QuerySolution qs = results.next();
-			//Iterator<String> it = new de.dwslab.petar.walks.QuerySolutionIterator(qs);
+			// Iterator<String> it = new de.dwslab.petar.walks.QuerySolutionIterator(qs);
 			Iterator<String> it = qs.varNames();
 			while (it.hasNext()) {
 				final String varName = it.next();

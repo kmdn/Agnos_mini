@@ -66,7 +66,7 @@ public class PageRankScorer implements Scorer<PossibleAssignment> {
 
 	@Override
 	public Number computeScore(PossibleAssignment param) {
-		final Object assignment = param.getAssignment();
+		final String assignment = param.getAssignment();
 		if (assignment != null) {
 			final Number retNumber = this.pagerankLoader.getScore(assignment.toString());
 			if (retNumber == null) {

@@ -23,7 +23,36 @@ public class EmbeddingsUtils {
 	private static Logger logger = Logger.getLogger(EmbeddingsUtils.class);
 
 	/**
-	 * See {@link #readEmbeddings(File, IDMappingLoader)}
+	 * See {@link #humanload(String, String, Set)}
+	 */
+	public static Map<String, List<Number>> humanload(final String mappingInPath, final String embeddingInPath)
+			throws IOException {
+		return humanload(mappingInPath, embeddingInPath, null);
+	}
+
+	/**
+	 * Load entity embeddings from a human readable file and translate the entity
+	 * mappings directly to the fully-qualified IRIs
+	 * 
+	 * @return the fully-qualified entity embeddings
+	 * @throws IOException
+	 */
+	public static Map<String, List<Number>> humanload(final String mappingInPath, final String embeddingInPath,
+			final Set<String> wantedEntities) throws IOException {
+		IDMappingLoader<String> entityMapping = new IDMappingLoader<String>().loadHumanFile(new File(mappingInPath));
+		final File embedFile = new File(embeddingInPath);
+		logger.info("Loading embeddings from: " + embedFile.getAbsolutePath());
+		Stopwatch.start(EmbeddingsUtils.class.getName() + "humanload");
+		final Map<String, List<Number>> entityEmbeddingsMap = EmbeddingsUtils.readEmbeddings(embedFile, entityMapping,
+				true, wantedEntities);
+		logger.info("Finished(" + Stopwatch.endOutput(EmbeddingsUtils.class.getName() + "humanload")
+				+ " ms.) loading embeddings from: " + embedFile.getAbsolutePath());
+		entityMapping = null;
+		return entityEmbeddingsMap;
+	}
+
+	/**
+	 * See {@link #readEmbeddings(File, IDMappingLoader, boolean, Set)}
 	 * 
 	 * @param intputFile
 	 * @return
@@ -35,6 +64,10 @@ public class EmbeddingsUtils {
 		return readEmbeddings(intputFile, null, true, null);
 	}
 
+	/**
+	 * See {@link #readEmbeddings(File, IDMappingLoader, boolean, String, boolean, Set)}
+	 * 
+	 */
 	public static Map<String, List<Number>> readEmbeddings(final File intputFile,
 			final IDMappingLoader<String> mappingLoader, final boolean normalize, final Set<String> wantedEntities)
 			throws FileNotFoundException, IOException {

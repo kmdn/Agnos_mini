@@ -1,4 +1,4 @@
-package launcher;
+package install;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,8 +12,6 @@ import org.apache.jena.tdb.TDBFactory;
 
 import com.beust.jcommander.internal.Lists;
 
-import install.LauncherSetupTDB;
-import install.PageRankComputer;
 import install.surfaceform.query.general.SFQuery;
 import structure.config.constants.FilePaths;
 import structure.config.kg.DefaultQuery;

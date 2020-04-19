@@ -40,10 +40,11 @@ public enum Numbers {
 			"How much a new token has to increase the existing string to create a new mention for it"), //
 	// LSH Variables
 	LSH_BANDS(20, "Number of bands used for LSH/MinHash"), //
-	LSH_BUCKETS(1000, "Number of buckets used for LSH/MinHash"),//
+	LSH_BUCKETS(1000, "Number of buckets used for LSH/MinHash"), //
 	// Embedding similarity relevant variables
-	SIMILARITY_CACHE_SIZE(1_024 * 1_024, "Cache size for EntitySimilarityService"),//
-
+	SIMILARITY_CACHE_SIZE(1_024 * 1_024, "Cache size for EntitySimilarityService"), //
+	EMBEDDINGS_MAX_DIMENSIONS(100,
+			"Maximum number of dimensions for an embedding (e.g. to reduce RAM load at the cost of accuracy...)"),//
 	// ##################################
 	// DATASET NUMERIC CONSTANTS
 	// ##################################
@@ -52,6 +53,7 @@ public enum Numbers {
 	// # TEST
 	// ##################################
 	;
+
 	public final Number val;
 
 	Numbers(final Number val) {

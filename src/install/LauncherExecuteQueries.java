@@ -20,7 +20,7 @@ public class LauncherExecuteQueries {
 
 	public static void main(String[] args) {
 		Pipeline pipeline = new Pipeline();
-		final EnumModelType KG = EnumModelType.DBPEDIA_FULL;
+		final EnumModelType KG = EnumModelType.DEFAULT;//DBPEDIA_FULL;
 		final String execMsg = "Executing queries for KG(" + KG.name() + ") - (SF, HSF, NP_HSF, NP_URLHSF)";
 		Logger.getLogger(LauncherExecuteQueries.class)
 				.info(execMsg);

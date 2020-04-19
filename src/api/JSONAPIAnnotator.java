@@ -28,9 +28,10 @@ import org.json.simple.parser.ParseException;
 import com.beust.jcommander.internal.Lists;
 
 import linking.candidategeneration.CandidateGeneratorMap;
-import linking.disambiguation.Disambiguator;
+import linking.disambiguation.DisambiguatorAgnos;
 import linking.mentiondetection.InputProcessor;
 import linking.mentiondetection.StopwordsLoader;
+import linking.mentiondetection.exact.HashMapCaseInsensitive;
 import linking.pruning.MentionPruner;
 import linking.pruning.ThresholdPruner;
 import structure.config.constants.Comparators;
@@ -54,7 +55,7 @@ public class JSONAPIAnnotator implements Executable {
 
 	private BufferedWriter log = null;
 	private final String NEWLINE = Strings.NEWLINE.val;
-	private final Map<String, EnumModelType> KGs = new HashMap<>();
+	private final Map<String, EnumModelType> KGs = new HashMapCaseInsensitive<>();
 
 	private final String chooserWatch = "Scorer (Watch)";
 	private final String detectionWatch = MentionDetector.class.getName();
@@ -73,7 +74,7 @@ public class JSONAPIAnnotator implements Executable {
 	private Set<String> stopwords = null;
 	private Map<String, MentionDetector> mdMap = new HashMap<>();
 	private Map<String, CandidateGenerator> candidateGeneratorMap = new HashMap<>();
-	private Map<String, Disambiguator> disambiguatorMap = new HashMap<>();
+	private Map<String, DisambiguatorAgnos> disambiguatorMap = new HashMap<>();
 	private Map<String, MentionPruner> prunerMap = new HashMap<>();
 	private final EnumEmbeddingMode embeddingMode;
 	private final String outFilepath = "/vol2/kris/api_agnos.log";
@@ -95,7 +96,7 @@ public class JSONAPIAnnotator implements Executable {
 		}
 		this.embeddingMode = embeddingMode;
 		addKG("wd", EnumModelType.WIKIDATA);
-		addKG("dbp", EnumModelType.DBPEDIA_FULL);
+		// addKG("dbp", EnumModelType.DBPEDIA_FULL);
 	}
 
 	private void addKG(EnumModelType KG) {
@@ -150,7 +151,7 @@ public class JSONAPIAnnotator implements Executable {
 				wantedResources.addAll(e.getValue());
 			}
 
-			final Disambiguator disambiguator = new Disambiguator(KG, this.embeddingMode, wantedResources);
+			final DisambiguatorAgnos disambiguator = new DisambiguatorAgnos(KG, this.embeddingMode, wantedResources);
 			this.disambiguatorMap.put(KG.name(), disambiguator);
 			Stopwatch.endOutput(chooserWatch);
 			this.prunerMap.put(KG.name(), new ThresholdPruner(1.0d));
@@ -246,7 +247,9 @@ public class JSONAPIAnnotator implements Executable {
 		log("Found KG:" + KG);
 		if (KG == null) {
 			getLogger().error("Could not find an available KG for '" + chosenKG + "'");
-			KG = EnumModelType.DBPEDIA_FULL;
+			KG = EnumModelType.
+			// DEFAULT;
+			DBPEDIA_FULL;
 			// return "ERROR";
 		} else {
 			getLogger().info("Found KG: " + KG.name());
