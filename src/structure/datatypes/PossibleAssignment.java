@@ -21,7 +21,6 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	private boolean computedScore = false;
 	private boolean warned = false;
 
-	@SuppressWarnings("rawtypes")
 	public static PossibleAssignment createNew(final String assignment, final String mentionToken) {
 		// return new PossibleAssignment(new Resource(assignment, false).toN3(),
 		// mentionToken);
@@ -29,8 +28,13 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	}
 
 	public PossibleAssignment(final String assignment, final String mentionToken) {
+		this(assignment, mentionToken, 0.0f);
+	}
+
+	public PossibleAssignment(final String assignment, final String mentionToken, final Number score) {
 		this.assignment = assignment;
 		this.mentionToken = mentionToken;
+		this.score = score;
 	}
 
 	@Override
@@ -60,7 +64,7 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 
 	@Override
 	public String toString() {
-		return getAssignment();
+		return getAssignment() + " / " + this.score;
 	}
 
 	public Number getScore() {

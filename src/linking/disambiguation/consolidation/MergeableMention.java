@@ -3,12 +3,11 @@ package linking.disambiguation.consolidation;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 
-public class MergeableMention extends Mention implements Mergeable<Mention> {
+public class MergeableMention extends Mention {
 	private Map<PossibleAssignment, MergeablePossibleAssignment> possibleAssignments = new HashMap<>();
 
 	public MergeableMention(String word, PossibleAssignment assignment, int offset) {
@@ -36,9 +35,12 @@ public class MergeableMention extends Mention implements Mergeable<Mention> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Mention) {
+		if (obj instanceof Mention || obj instanceof MergeableMention) {
 			final Mention mentionObj = (Mention) obj;
-			return getMention().equals(mentionObj.getMention()) && getOffset() == mentionObj.getOffset();
+			return getMention().equals(mentionObj.getMention()) && (getOffset() == mentionObj.getOffset())
+					&& (((getAssignment() == null && mentionObj.getAssignment() == null)
+							|| (getAssignment() == mentionObj.getAssignment()))
+							&& getAssignment().equals(mentionObj.getAssignment()));
 		}
 		return super.equals(obj);
 	}
@@ -65,35 +67,8 @@ public class MergeableMention extends Mention implements Mergeable<Mention> {
 		return this.possibleAssignments.keySet();
 	}
 
-	@Override
-	public void merge(Mention otherMention) {
-		merge(new MergeableMention(otherMention));
-	}
-
-	/**
-	 * Merge otherMention into this (mergeable) mention
-	 * 
-	 * @param otherMention
-	 */
-	public void merge(MergeableMention otherMention) {
-		// Mention w/ same word at same offset
-		// So: Combine them
-		final Map<PossibleAssignment, MergeablePossibleAssignment> toAddAssignments = otherMention.possibleAssignments;
-
-		// Go through every assignment we have to add
-		for (Entry<PossibleAssignment, MergeablePossibleAssignment> e : toAddAssignments.entrySet()) {
-			final MergeablePossibleAssignment existingAssignment;
-			if ((existingAssignment = this.possibleAssignments.get(e.getValue())) != null) {
-				// This Assignment already exists in ours, so combine them
-				existingAssignment
-						.setScore(existingAssignment.getScore().doubleValue() + e.getValue().getScore().doubleValue());
-			} else {
-				// doesn't exist yet, so add it!
-				this.possibleAssignments.put(e.getValue(), e.getValue());
-			}
-		}
-		System.out.println("PossAss NPE Debug SYSOUTs in " + getClass());
-		System.out.println("Ass.:" + getPossibleAssignments());
+	public PossibleAssignment findAssignment(final PossibleAssignment assignment) {
+		return this.possibleAssignments.get(assignment);
 	}
 
 }

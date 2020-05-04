@@ -1,12 +1,19 @@
 package linking.disambiguation.consolidation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import com.beust.jcommander.internal.Lists;
 
 import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
+import structure.datatypes.PossibleAssignment;
 import structure.linker.Linker;
 
 public class SimpleConsolidator extends AbstractConsolidator {
@@ -45,40 +52,94 @@ public class SimpleConsolidator extends AbstractConsolidator {
 	 * other, add to the first, but that makes the data structures more difficult to
 	 * handle...
 	 */
-	public Collection<MergeableMention> mergeMentions(Collection<MergeableMention> firstLinkerMentions,
-			Collection<Mention> secondLinkerMentions) {
+	public Collection<? extends Mention> mergeMentions(Collection<? extends Mention> firstLinkerMentions,
+			Collection<? extends Mention> secondLinkerMentions) {
+		final Map<String, Mention> mergedMentions = new HashMap<>();
 
-		final Map<MergeableMention, MergeableMention> mergedMentions = new HashMap<>();
+		final Map<String, Mention> leftMapMentions = new HashMap<>();
+		final Map<String, Mention> rightMapMentions = new HashMap<>();
+		final Set<String> keys = new HashSet<>();
+		for (Mention mention : firstLinkerMentions) {
+			final String key = makeKey(mention);
+			leftMapMentions.put(key, mention);
+			keys.add(key);
+		}
+		for (Mention mention : secondLinkerMentions) {
+			final String key = makeKey(mention);
+			rightMapMentions.put(makeKey(mention), mention);
+			keys.add(key);
+		}
 
-		if (firstLinkerMentions != null && firstLinkerMentions.size() > 0) {
-			for (Mention linkerMention : firstLinkerMentions) {
-				final MergeableMention storedMention;
-				if ((storedMention = mergedMentions.get(linkerMention)) != null) {
-					storedMention.merge(linkerMention);
-				} else {
-					final MergeableMention copyMention = new MergeableMention(linkerMention);
-					mergedMentions.put(copyMention, copyMention);
-				}
+		for (String key : keys) {
+			final Mention leftMention = leftMapMentions.get(key);
+			final Mention rightMention = leftMapMentions.get(key);
+			if (leftMention != null && rightMention != null) {
+				final Mention mergedMention = merge(leftMention, rightMention);
+				mergedMentions.put(key, mergedMention);
+			} else if (leftMention != null) {
+				final Mention mention = new Mention(leftMention);
+				mergedMentions.put(key, mention);
+			} else if (rightMention != null) {
+				final Mention mention = new Mention(rightMention);
+				mergedMentions.put(key, mention);
 			}
 		}
 
-		if (secondLinkerMentions != null && secondLinkerMentions.size() > 0) {
-			for (Mention linkerMention : secondLinkerMentions) {
-				final MergeableMention storedMention;
-				if ((storedMention = mergedMentions.get(linkerMention)) != null) {
-					storedMention.merge(linkerMention);
-				} else {
-					final MergeableMention copyMention = new MergeableMention(linkerMention);
-					mergedMentions.put(copyMention, copyMention);
-				}
-			}
+		Collection<Mention> ret = Lists.newArrayList();
+		for (Entry<String, Mention> e : mergedMentions.entrySet()) {
+			e.getValue().assignBest();
+			ret.add(e.getValue());
+		}
+		return ret;
+	}
+
+	private Mention merge(Mention leftMention, Mention rightMention) {
+
+		final Collection<PossibleAssignment> leftAssignments = leftMention.getPossibleAssignments();
+		final Collection<PossibleAssignment> rightAssignments = leftMention.getPossibleAssignments();
+		final Map<String, PossibleAssignment> leftMapAssignments = new HashMap<>();
+		final Map<String, PossibleAssignment> rightMapAssignments = new HashMap<>();
+		final Collection<String> keys = new HashSet<>();
+		for (PossibleAssignment assignment : leftAssignments) {
+			final String key = makeKey(assignment);
+			leftMapAssignments.put(key, assignment);
+			keys.add(key);
+		}
+		for (PossibleAssignment assignment : rightAssignments) {
+			final String key = makeKey(assignment);
+			rightMapAssignments.put(makeKey(assignment), assignment);
+			keys.add(key);
 		}
 
-		// Assigns the best to each...
-		for (MergeableMention mention : mergedMentions.keySet()) {
-			mention.assignBest();
+		final Collection<PossibleAssignment> mergedAssignments = new ArrayList<>();
+
+		// Merge assignments
+		for (String key : keys) {
+			final PossibleAssignment leftVal = leftMapAssignments.get(key);
+			final PossibleAssignment rightVal = rightMapAssignments.get(key);
+			final PossibleAssignment assignment;
+			final String mentionWord, mentionOriginalMention, mentionOriginalWithoutStopwords;
+			if (leftVal != null) {
+				assignment = new PossibleAssignment(leftVal.getAssignment(), leftVal.getMentionToken(),
+						leftVal.getScore().doubleValue() + (rightVal == null ? 0 : rightVal.getScore().doubleValue()));
+			} else {
+				assignment = new PossibleAssignment(rightVal.getAssignment(), rightVal.getMentionToken(),
+						rightVal.getScore().doubleValue() + (leftVal == null ? 0 : leftVal.getScore().doubleValue()));
+			}
+			mergedAssignments.add(assignment);
 		}
-		return mergedMentions.keySet();
+
+		return new Mention(leftMention.getMention(), mergedAssignments, leftMention.getOffset(),
+				leftMention.getDetectionConfidence(), leftMention.getOriginalMention(),
+				leftMention.getOriginalWithoutStopwords());
+	}
+
+	private String makeKey(PossibleAssignment assignment) {
+		return assignment.getAssignment() == null ? "" : assignment.getAssignment();
+	}
+
+	private String makeKey(Mention linkerMention) {
+		return linkerMention.getOffset() + linkerMention.getMention();
 	}
 
 }

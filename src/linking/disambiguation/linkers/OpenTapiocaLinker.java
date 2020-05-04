@@ -34,7 +34,6 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 
 	@Override
 	public boolean init() {
-		System.out.println("OpenTapioca initialised");
 		https();
 		url("opentapioca.org");
 		suffix("/api/nif");
@@ -44,7 +43,7 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 
 	@Override
 	public Number getWeight() {
-		return 1.0f;
+		return 100.0f;
 	}
 
 	@Override
@@ -93,8 +92,7 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 	@Override
 	protected Collection<Mention> textToMentions(String annotatedText) {
 		// Transform nif to another format
-		System.out.println("OpenTapioca TextToMentions: " + annotatedText);
-		Collection<Mention> retMentions = Lists.newArrayList();
+		final Collection<Mention> retMentions = Lists.newArrayList();
 		final TurtleNIFDocumentParser parser = new TurtleNIFDocumentParser(new AgnosTurtleNIFParser());
 		final Document document;
 		try {
@@ -103,7 +101,13 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 			final List<Marking> markings = document.getMarkings();
 			for (Marking m : markings) {
 				// https://github.com/dice-group/gerbil/wiki/Document-Markings-in-gerbil.nif.transfer
-				retMentions.add(new MentionMarking(document.getText(), m));
+				final Mention mention = MentionMarking.create(document.getText(), m);
+				mention.assignBest();
+				mention.getAssignment().setScore(getWeight());
+
+				if (mention != null) {
+					retMentions.add(mention);
+				}
 			}
 		} catch (Exception e) {
 			getLogger().error("Exception while processing request's return.", e);
@@ -148,6 +152,20 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 		} catch (IOException e) {
 			getLogger().error(e.getLocalizedMessage());
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		int ret = 0;
+		ret += nullHash(this.paramContent, 2);
+		ret += nullHash(getClass(), 4);
+		ret += nullHash(getKG(), 8);
+		ret += nullHash(getScoreModulationFunction(), 16);
+		ret += nullHash(getUrl(), 32);
+		ret += nullHash(getTimeout(), 64);
+		ret += nullHash(this.params, 128);
+		ret += nullHash(this.getUrl(), 256);
+		return ret + super.hashCode();
 	}
 
 }

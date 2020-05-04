@@ -369,8 +369,7 @@ public class NIFAPIAnnotator implements Executable {
 		// Mention Detection
 		// ########################################################
 		mentions = md.detect(text);
-		System.out.println("Found mentions:");
-		System.out.println(mentions);
+
 		if (preRestrictToMarkings && markings != null && markings.size() != 0) {
 			mentions = restrictMentionsToMarkings(mentions, markings, text);
 		}

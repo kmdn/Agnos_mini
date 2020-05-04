@@ -10,19 +10,16 @@ public class MergeablePossibleAssignment extends PossibleAssignment {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof PossibleAssignment) {
+		if (obj instanceof PossibleAssignment || obj instanceof MergeablePossibleAssignment) {
 			final PossibleAssignment ass = ((PossibleAssignment) obj);
 			return getAssignment().equals(ass.getAssignment()) && getMentionToken().equals(ass.getMentionToken());
 		}
 		return super.equals(obj);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return 23 * (getAssignment().hashCode() + getMentionToken().hashCode());
 	}
-
-	
-	
 
 }

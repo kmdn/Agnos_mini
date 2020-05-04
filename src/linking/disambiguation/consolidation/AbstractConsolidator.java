@@ -28,8 +28,8 @@ public abstract class AbstractConsolidator implements Consolidator, Loggable {
 
 	protected Map<String, List<Linker>> mapLinkers = new HashMap<>();
 
-	public abstract Collection<MergeableMention> mergeMentions(Collection<MergeableMention> linkerMentions,
-			Collection<Mention> value);
+	public abstract Collection<? extends Mention> mergeMentions(Collection<? extends Mention> linkerMentions,
+			Collection<? extends Mention> value);
 
 	private final long sleeptime = 10l;
 
@@ -79,8 +79,8 @@ public abstract class AbstractConsolidator implements Consolidator, Loggable {
 	 * @return map with the mentions separated by linker
 	 * @throws InterruptedException
 	 */
-	public Map<Linker, Collection<Mention>> executeLinkers(final String input) throws InterruptedException {
-		final Map<Linker, Collection<Mention>> mapLinkerResults = new HashMap<>();
+	public Map<Linker, Collection<? extends Mention>> executeLinkers(final String input) throws InterruptedException {
+		final Map<Linker, Collection<? extends Mention>> mapLinkerResults = new HashMap<>();
 		//
 		final AtomicInteger doneCounter = new AtomicInteger(0);
 		final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors
@@ -92,8 +92,11 @@ public abstract class AbstractConsolidator implements Consolidator, Loggable {
 			final Future<Integer> future = executor.submit(new Callable<Integer>() {
 				@Override
 				public Integer call() throws Exception {
+					// System.out.println("Linker Class Executed: "+linker.getClass());
 					final Collection<Mention> mentions = linker.annotateMentions(input);
-					mapLinkerResults.put(linker, mentions);
+					synchronized (mapLinkerResults) {
+						mapLinkerResults.put(linker, mentions);
+					}
 					return doneCounter.incrementAndGet();
 				}
 			});
@@ -114,6 +117,8 @@ public abstract class AbstractConsolidator implements Consolidator, Loggable {
 		if (!terminated) {
 			throw new RuntimeException("Could not compute score in time.");
 		}
+		System.out.println("DONE COUNTER: " + doneCounter.intValue());
+		System.out.println("Map:" + mapLinkerResults);
 		return mapLinkerResults;
 	}
 
@@ -128,23 +133,27 @@ public abstract class AbstractConsolidator implements Consolidator, Loggable {
 	 * @param mapLinkerMention map with linkers and their disambiguated mentions
 	 * @return map with (merged) mentions keyed by KG.name()
 	 */
-	public Map<String, Collection<Mention>> mergeByKG(Map<Linker, Collection<Mention>> mapLinkerMention) {
-		final Map<String, Collection<MergeableMention>> mapMergedResults = new HashMap<>();
+	public Map<String, Collection<? extends Mention>> mergeByKG(
+			Map<Linker, Collection<? extends Mention>> mapLinkerMention) {
+		final Map<String, Collection<? extends Mention>> mapMergedResults = new HashMap<>();
 		// Go through the map with the linkers and their results
-		for (Entry<Linker, Collection<Mention>> e : mapLinkerMention.entrySet()) {
-			final Collection<MergeableMention> linkerMentions;
+		for (Entry<Linker, Collection<? extends Mention>> e : mapLinkerMention.entrySet()) {
+			final Collection<? extends Mention> linkerMentions;
 			final String keyKG = e.getKey().getKG();
+			final Collection<? extends Mention> otherLinkedMentions = e.getValue();
 			if ((linkerMentions = mapMergedResults.get(keyKG)) != null) {
 				// We already have mentions for this KG, so merge them
-				final Collection<MergeableMention> mergedMentions = mergeMentions(linkerMentions, e.getValue());
+				final Collection<? extends Mention> mergedMentions = mergeMentions(linkerMentions, otherLinkedMentions);
 				mapMergedResults.put(keyKG, mergedMentions);
 			} else {
 				// We don't have it yet, so just put it into the results map
-				mapMergedResults.put(keyKG, new HashSet<>());
+				mapMergedResults.put(keyKG, new HashSet<>(e.getValue()));
+				// new HashSet<>()
+				// e.getValue()
 			}
 		}
 		// Then check which
 
-		return null;
+		return mapMergedResults;
 	}
 }

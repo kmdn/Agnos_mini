@@ -1,12 +1,12 @@
-Mention[(0, 10, [http://www.wikidata.org/entity/Q19837]); 1.0] 
-Original Text:(0, 10, [http://www.wikidata.org/entity/Q19837])
-Possible assignments: None
-Found assignment: null
-mention.ass<null>
+Mention[Joan Baez; 1.0] 
+Original Text:Joan Baez
+Possible assignments: 1
+Found assignment: http://www.wikidata.org/entity/Q131725 / 200.0
+200.0
 --------------------------------------------------
-Mention[(15, 9, [http://www.wikidata.org/entity/Q131725]); 1.0] 
-Original Text:(15, 9, [http://www.wikidata.org/entity/Q131725])
-Possible assignments: None
-Found assignment: null
-mention.ass<null>
+Mention[Steve Jobs; 1.0] 
+Original Text:Steve Jobs
+Possible assignments: 1
+Found assignment: http://www.wikidata.org/entity/Q19837 / 200.0
+200.0
 --------------------------------------------------

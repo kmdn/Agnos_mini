@@ -16,7 +16,6 @@ public interface LinkerNIF extends Linker {
 		documents.add(document);
 		final NIFWriter writer = new TurtleNIFWriter();
 		final String nifString = writer.writeNIF(documents);
-		System.out.println("NIF String:"+nifString);
 		// final String retNifDocumentStr = creator.getDocumentAsNIFString(document);
 		return nifString;
 	}

@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import structure.config.constants.Numbers;
 import structure.datatypes.EnumDetectionType;
 import structure.datatypes.Mention;
+import structure.datatypes.PossibleAssignment;
 import structure.datatypes.TextOffset;
 
 /**
@@ -108,7 +109,7 @@ public class InputProcessor {
 		if (processedInput == null || processedInput.length() == 0) {
 			return null;
 		}
-		return new Mention(null, null, startIndex, 0f, original, processedInput);
+		return new Mention((String) null, (PossibleAssignment) null, startIndex, 0d, original, processedInput);
 	}
 
 	/**

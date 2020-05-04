@@ -152,7 +152,7 @@ public class MentionUtils {
 	 * 
 	 * @param mentions
 	 */
-	public static void displayMentions(Collection<Mention> mentions) {
+	public static void displayMentions(Collection<? extends Mention> mentions) {
 		System.out.println("#######################################################");
 		System.out.println("Mention Details(" + mentions.size() + "):");
 		final TreeMap<String, Mention> alphabeticalSortedMentions = new TreeMap<String, Mention>();

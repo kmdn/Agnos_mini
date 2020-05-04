@@ -24,6 +24,7 @@ import com.beust.jcommander.internal.Lists;
  */
 public class MentionMarking extends Mention {
 	private final static double defaultConfidence = 1.0d;
+	private final static double defaultScore = 1.0d;
 
 	public MentionMarking(String word, PossibleAssignment assignment, int offset, double detectionConfidence,
 			String originalMention, String originalWithoutStopwords) {
@@ -59,7 +60,7 @@ public class MentionMarking extends Mention {
 				new PossibleAssignment(namedEntity.getUri(),
 						inText.substring(namedEntity.getStartPosition(),
 								namedEntity.getStartPosition() + namedEntity.getLength())),
-				namedEntity.getStartPosition(), 0,
+				namedEntity.getStartPosition(), defaultConfidence,
 				inText.substring(namedEntity.getStartPosition(),
 						namedEntity.getStartPosition() + namedEntity.getLength()),
 				inText.substring(namedEntity.getStartPosition(),
@@ -129,9 +130,25 @@ public class MentionMarking extends Mention {
 	private List<PossibleAssignment> transformURIs2Assignment(final String mention, final Meaning meaning) {
 		List<PossibleAssignment> possibleAssignments = Lists.newArrayList();
 		for (String uri : meaning.getUris()) {
-			possibleAssignments.add(new PossibleAssignment(uri, mention));
+			final PossibleAssignment possAss = new PossibleAssignment(uri, mention);
+			possAss.setScore(defaultScore);
+			possibleAssignments.add(possAss);
 		}
 		return possibleAssignments;
+	}
+
+	/**
+	 * Creates a MentionMarking with the appropriate type of Marking
+	 * 
+	 * @param input input text
+	 * @param m     marking from this passed text
+	 * @return new MentionMarking instance
+	 */
+	public static MentionMarking create(final String input, final Marking m) {
+		if (m instanceof NamedEntity) {
+			return new MentionMarking(input, (NamedEntity) m);
+		}
+		return new MentionMarking(input, m);
 	}
 
 }

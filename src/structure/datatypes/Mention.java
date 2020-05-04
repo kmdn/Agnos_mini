@@ -1,6 +1,7 @@
 package structure.datatypes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,22 +10,29 @@ import java.util.List;
 import structure.utils.Loggable;
 
 public class Mention implements Loggable {
-	protected String mention = null;
-	protected PossibleAssignment assignment = null;
+	protected String mention;
+	protected PossibleAssignment assignment;
 	protected int offset = -1;
 	protected double detectionConfidence = -1;
-	protected Collection<PossibleAssignment> possibleAssignments = null;
+	protected Collection<PossibleAssignment> possibleAssignments;
 	protected final String originalMention;
 	protected final String originalWithoutStopwords;
 
 	public Mention(final String word, final PossibleAssignment assignment, final int offset,
 			final double detectionConfidence, final String originalMention, final String originalWithoutStopwords) {
+		this(word, new ArrayList<>(Arrays.asList(new PossibleAssignment[] { assignment })), offset, detectionConfidence,
+				originalMention, originalWithoutStopwords);
+	}
+
+	public Mention(final String word, final Collection<PossibleAssignment> possibleAssignments, final int offset,
+			final double detectionConfidence, final String originalMention, final String originalWithoutStopwords) {
 		this.mention = word;
-		this.assignment = assignment;
 		this.offset = offset;
 		this.detectionConfidence = detectionConfidence;
 		this.originalMention = originalMention;
 		this.originalWithoutStopwords = originalWithoutStopwords;
+		this.possibleAssignments = possibleAssignments;
+		assignBest();
 	}
 
 	public Mention(final String word, final PossibleAssignment assignment, final int offset) {
@@ -32,9 +40,28 @@ public class Mention implements Loggable {
 		this(word, assignment, offset, -1, word, word);
 	}
 
+	/**
+	 * Copy constructor
+	 * @param mention
+	 */
+	public Mention(Mention mention) {
+		this.mention = mention.getMention();
+		this.offset = mention.getOffset();
+		this.detectionConfidence = mention.getDetectionConfidence();
+		this.originalMention = mention.getOriginalMention();
+		this.originalWithoutStopwords = mention.getOriginalWithoutStopwords();
+		this.possibleAssignments = new ArrayList<>();
+		for (PossibleAssignment assignment : mention.getPossibleAssignments()) {
+			this.possibleAssignments.add(new PossibleAssignment(assignment.getAssignment(),
+					assignment.getMentionToken(), assignment.getScore()));
+		}
+		assignBest();
+	}
+
 	@Override
 	public String toString() {
-		return "[" + getMention() + "/" + getOriginalMention() + "/" + getOriginalWithoutStopwords() + "]";
+		return "[" + getMention() + "/" + getOriginalMention() + "/" + getOriginalWithoutStopwords()
+				+ this.assignment == null ? "no assngmt" : this.assignment + "]";
 	}
 
 	/**
@@ -51,7 +78,14 @@ public class Mention implements Loggable {
 		if (possibleAssignments instanceof List) {
 			listAssignments = (List) possibleAssignments;
 		} else {
-			listAssignments = new ArrayList<>(possibleAssignments);
+			if (possibleAssignments != null) {
+				listAssignments = new ArrayList<>(possibleAssignments);
+			} else if (this.assignment != null) {
+				listAssignments = new ArrayList<>();
+				listAssignments.add(this.assignment);
+			} else {
+				return;
+			}
 		}
 		Collections.sort(listAssignments, Comparator.reverseOrder());
 		if (listAssignments.size() > 0) {
