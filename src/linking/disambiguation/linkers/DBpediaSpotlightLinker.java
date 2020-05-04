@@ -2,11 +2,9 @@ package linking.disambiguation.linkers;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URI;
+import java.net.ProtocolException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiFunction;
 
@@ -39,16 +37,20 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 
 	// private final String baseURL = "api.dbpedia-spotlight.org";
 	// private final String urlSuffix = "/en/annotate";
-	private final String textKeyword = "text=";
+	private final String textKeyword = "text";
 	// public final String text = "<text>";
-	private final String confidenceKeyword = "confidence=";
+	private final String confidenceKeyword = "confidence";
 	private float confidence = 0.0f;
 
 	private Collection<Mention> results = null;
 
 	@Override
 	public boolean init() {
+		// sets the scheme
+		https();
+		// sets the url
 		url("api.dbpedia-spotlight.org");
+		// sets the suffix
 		suffix("/en/annotate");
 		return true;
 	}
@@ -56,12 +58,17 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 	@Override
 	public HttpURLConnection openConnection(final String input) throws URISyntaxException, IOException {
 		final String confidence = Float.toString(this.confidence);
-		final String query = textKeyword + input + "&" + confidenceKeyword + confidence;
-		final URI uri = new URI(https, url, suffix, query, null);
-		final URL url = uri.toURL();
-		final HttpURLConnection conn = super.openConnection(url);
-		conn.setRequestProperty("accept", "application/json");
+		// final String query = textKeyword + "=" + input + "&" + confidenceKeyword +
+		// "=" + confidence;
+		setParam(textKeyword, input);
+		setParam(confidenceKeyword, confidence);
+		final HttpURLConnection conn = openConnectionWParams();
 		return conn;
+	}
+
+	@Override
+	protected void setupConnectionDetails(final HttpURLConnection conn) throws ProtocolException {
+		conn.setRequestProperty("accept", "application/json");
 	}
 
 	@Override
@@ -99,10 +106,14 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 					final Integer offset = obj.getInt(keyOffset);
 					final String surfaceForm = obj.getString(keySurfaceForm);
 					final String uri = obj.getString(keyURI);
-					final Mention mention = new Mention(surfaceForm, new PossibleAssignment(uri, surfaceForm), offset,
-							this.confidence, surfaceForm, surfaceForm);
-					mention.updatePossibleAssignments(
-							Arrays.asList(new PossibleAssignment[] { new PossibleAssignment(uri, surfaceForm) }));
+					final PossibleAssignment possAss = new PossibleAssignment(uri, surfaceForm);
+					final Mention mention = new Mention(surfaceForm, possAss, offset, this.confidence, surfaceForm,
+							surfaceForm);
+
+					final Collection<PossibleAssignment> assignments = new ArrayList<>();
+					assignments.add(possAss);
+					mention.updatePossibleAssignments(assignments);
+
 					ret.add(mention);
 				} catch (JSONException exc) {
 					exc.printStackTrace();
@@ -118,17 +129,6 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 	public DBpediaSpotlightLinker confidence(final float confidence) {
 		this.confidence = confidence;
 		return this;
-	}
-
-	@Override
-	public DBpediaSpotlightLinker setParam(String paramName, String paramValue) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getKG() {
-		return this.KG.name();
 	}
 
 	@Override

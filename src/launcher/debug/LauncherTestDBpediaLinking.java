@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import linking.disambiguation.consolidation.SimpleConsolidator;
 import linking.disambiguation.linkers.DBpediaSpotlightLinker;
+import linking.disambiguation.linkers.OpenTapiocaLinker;
 import structure.datatypes.Mention;
 import structure.linker.Linker;
 import structure.utils.MentionUtils;
@@ -13,8 +14,21 @@ import structure.utils.MentionUtils;
 public class LauncherTestDBpediaLinking {
 
 	public static void main(String[] args) {
-		//consolidateDBpedia();
-		singleDBpedia();
+		final String input = "Steve Jobs and Joan Baez are famous people";
+		// consolidateDBpedia();
+		singleOpenTapioca(input);
+		//singleDBpedia();
+	}
+
+	private static void singleOpenTapioca(final String input) {
+		final Linker linker = new OpenTapiocaLinker();
+		// final String ret = linker.annotate("Steve Jobs and Joan Baez are famous
+		// people");
+		//System.out.println("Result:" + linker.annotate(input));
+		final Collection<Mention> ret = linker.annotateMentions(input);
+
+		MentionUtils.displayMentions(ret);
+		System.out.println("Res: " + ret);
 	}
 
 	private static void singleDBpedia() {

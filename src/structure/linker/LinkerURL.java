@@ -42,4 +42,13 @@ public interface LinkerURL extends Linker {
 	 */
 	public LinkerURL timeout(final int timeout);
 
+	/**
+	 * Sets specific parameter with given value
+	 * 
+	 * @param paramName  parameter name
+	 * @param paramValue value of the parameter
+	 * @return
+	 */
+	public LinkerURL setParam(final String paramName, final String paramValue);
+
 }

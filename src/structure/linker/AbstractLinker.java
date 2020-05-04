@@ -10,6 +10,11 @@ public abstract class AbstractLinker implements Linker {
 	}
 
 	@Override
+	public String getKG() {
+		return this.KG.name();
+	}
+
+	@Override
 	public int hashCode() {
 		return super.hashCode() + getClass().hashCode() + getKG().hashCode();
 	}

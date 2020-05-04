@@ -28,8 +28,12 @@ import org.aksw.gerbil.io.nif.impl.TurtleNIFParser;
  */
 public class TurtleNIFDocumentParser extends AbstractNIFDocumentParser {
 
-    public TurtleNIFDocumentParser() {
-        super(new TurtleNIFParser());
-    }
+	public TurtleNIFDocumentParser() {
+		super(new TurtleNIFParser());
+	}
+
+	public TurtleNIFDocumentParser(TurtleNIFParser parser) {
+		super(parser);
+	}
 
 }

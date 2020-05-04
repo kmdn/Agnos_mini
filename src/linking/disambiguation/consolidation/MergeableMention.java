@@ -92,7 +92,8 @@ public class MergeableMention extends Mention implements Mergeable<Mention> {
 				this.possibleAssignments.put(e.getValue(), e.getValue());
 			}
 		}
-
+		System.out.println("PossAss NPE Debug SYSOUTs in " + getClass());
+		System.out.println("Ass.:" + getPossibleAssignments());
 	}
 
 }

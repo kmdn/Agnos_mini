@@ -4,8 +4,9 @@ import java.util.Collection;
 
 import structure.datatypes.Mention;
 import structure.interfaces.Weighable;
+import structure.utils.Loggable;
 
-public interface Linker extends Weighable<Number> {
+public interface Linker extends Weighable<Number>, Loggable {
 	
 	public boolean init();
 

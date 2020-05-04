@@ -178,7 +178,7 @@ public class MentionUtils {
 						sb.append(Strings.NEWLINE.val);
 						sb.append("Found assignment: " + m.getAssignment());
 						sb.append(Strings.NEWLINE.val);
-						sb.append("Found Assignment's Score: " + m.getAssignment().getScore());
+						sb.append("Found Assignment's Score: " + m == null ? "mention<null>" : m.getAssignment() == null ? "mention.ass<null>" : m.getAssignment().getScore());
 						sb.append(Strings.NEWLINE.val);
 						sb.append("--------------------------------------------------");
 						sb.append(Strings.NEWLINE.val);

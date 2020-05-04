@@ -50,9 +50,8 @@ public class SimpleConsolidator extends AbstractConsolidator {
 
 		final Map<MergeableMention, MergeableMention> mergedMentions = new HashMap<>();
 
-		if (firstLinkerMentions != null) {
+		if (firstLinkerMentions != null && firstLinkerMentions.size() > 0) {
 			for (Mention linkerMention : firstLinkerMentions) {
-
 				final MergeableMention storedMention;
 				if ((storedMention = mergedMentions.get(linkerMention)) != null) {
 					storedMention.merge(linkerMention);
@@ -63,7 +62,7 @@ public class SimpleConsolidator extends AbstractConsolidator {
 			}
 		}
 
-		if (secondLinkerMentions != null) {
+		if (secondLinkerMentions != null && secondLinkerMentions.size() > 0) {
 			for (Mention linkerMention : secondLinkerMentions) {
 				final MergeableMention storedMention;
 				if ((storedMention = mergedMentions.get(linkerMention)) != null) {
@@ -75,7 +74,7 @@ public class SimpleConsolidator extends AbstractConsolidator {
 			}
 		}
 
-		//Assigns the best to each...
+		// Assigns the best to each...
 		for (MergeableMention mention : mergedMentions.keySet()) {
 			mention.assignBest();
 		}
