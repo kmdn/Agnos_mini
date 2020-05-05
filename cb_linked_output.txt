@@ -1,12 +1,12 @@
-Mention[Joan Baez; 1.0] 
+Mention[Joan Baez; 0.0] 
 Original Text:Joan Baez
 Possible assignments: 1
-Found assignment: http://www.wikidata.org/entity/Q131725 / 200.0
-200.0
+Found assignment: http://dbpedia.org/resource/Joan_Baez / 0.999999999499579
+0.999999999499579
 --------------------------------------------------
-Mention[Steve Jobs; 1.0] 
+Mention[Steve Jobs; 0.0] 
 Original Text:Steve Jobs
 Possible assignments: 1
-Found assignment: http://www.wikidata.org/entity/Q19837 / 200.0
-200.0
+Found assignment: http://dbpedia.org/resource/Steve_Jobs / 0.999999852693872
+0.999999852693872
 --------------------------------------------------

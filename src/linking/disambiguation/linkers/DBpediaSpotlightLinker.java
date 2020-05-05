@@ -47,7 +47,8 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 	@Override
 	public boolean init() {
 		// sets the scheme
-		https();
+		// https();
+		http();
 		// sets the url
 		url("api.dbpedia-spotlight.org");
 		// sets the suffix
@@ -98,6 +99,7 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 			final String keyURI = "@URI";
 			final String keyOffset = "@offset";
 			final String keySurfaceForm = "@surfaceForm";
+			final String keySimilarityScore = "@similarityScore";
 
 			final JSONArray results = json.optJSONArray(keyMention);
 			for (int i = 0; i < results.length(); ++i) {
@@ -105,8 +107,9 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 					final JSONObject obj = results.getJSONObject(i);
 					final Integer offset = obj.getInt(keyOffset);
 					final String surfaceForm = obj.getString(keySurfaceForm);
+					final Double score = obj.getDouble(keySimilarityScore);
 					final String uri = obj.getString(keyURI);
-					final PossibleAssignment possAss = new PossibleAssignment(uri, surfaceForm);
+					final PossibleAssignment possAss = new PossibleAssignment(uri, surfaceForm, score);
 					final Mention mention = new Mention(surfaceForm, possAss, offset, this.confidence, surfaceForm,
 							surfaceForm);
 

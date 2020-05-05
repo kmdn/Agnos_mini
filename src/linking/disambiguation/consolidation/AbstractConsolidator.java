@@ -85,7 +85,7 @@ public abstract class AbstractConsolidator implements Consolidator, Loggable {
 		final AtomicInteger doneCounter = new AtomicInteger(0);
 		final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors
 				.newFixedThreadPool(Numbers.SCORER_THREAD_AMT.val.intValue());
-		//
+		//Foreach linker, we start the process of annotation
 		for (Linker linker : linkers) {
 
 			// Multi thread here

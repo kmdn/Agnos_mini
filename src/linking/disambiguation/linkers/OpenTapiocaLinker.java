@@ -24,6 +24,8 @@ import structure.linker.AbstractLinkerURLPOST;
 import structure.linker.LinkerNIF;
 
 public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNIF {
+	public Number defaultScore = 1.0d// getWeight()
+	;
 
 	public OpenTapiocaLinker() {
 		super(EnumModelType.WIKIDATA);
@@ -103,7 +105,7 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 				// https://github.com/dice-group/gerbil/wiki/Document-Markings-in-gerbil.nif.transfer
 				final Mention mention = MentionMarking.create(document.getText(), m);
 				mention.assignBest();
-				mention.getAssignment().setScore(getWeight());
+				mention.getAssignment().setScore(defaultScore);
 
 				if (mention != null) {
 					retMentions.add(mention);

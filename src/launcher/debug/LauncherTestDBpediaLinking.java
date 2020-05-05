@@ -42,15 +42,24 @@ public class LauncherTestDBpediaLinking {
 	}
 
 	private static void consolidateTest() {
-		// final DBpediaSpotlightLinker linker1 = new DBpediaSpotlightLinker();
-		// linker1.confidence(0.0f);
-		final Linker linker1 = new OpenTapiocaLinker();
+		final DBpediaSpotlightLinker linker1 = new DBpediaSpotlightLinker();
+		linker1.confidence(0.0f);
+		// final Linker linker1 = new OpenTapiocaLinker();
 		final Linker linker2 = new OpenTapiocaLinker();
 		// final String ret = linker.annotate("Steve Jobs and Joan Baez are famous
 		// people");
 
 		final String input = "Steve Jobs and Joan Baez are famous people";
 		// final Collection<Mention> ret = linker.annotateMentions(input);
+
+		final String keyTrustStore = "javax.net.ssl.trustStore";
+		final String keyTrustStorePassword = "javax.net.ssl.trustStorePassword";
+
+		final String valTrustStore = System.getProperty(keyTrustStore);
+		final String valTrustStorePassword = System.getProperty(keyTrustStorePassword);
+
+		System.setProperty(keyTrustStore, "clientTrustStore");
+		//System.setProperty(keyTrustStorePassword, "helloWorldSADASDASDAS");
 
 		final SimpleConsolidator consolidator = new SimpleConsolidator(linker1, linker2);
 		Map<Linker, Collection<? extends Mention>> linkerResults;
@@ -72,6 +81,11 @@ public class LauncherTestDBpediaLinking {
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} finally {
+			if (valTrustStore != null)
+				System.setProperty(keyTrustStore, valTrustStore);
+			if (valTrustStorePassword != null)
+				System.setProperty(keyTrustStorePassword, valTrustStorePassword);
 		}
 	}
 }

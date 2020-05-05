@@ -139,7 +139,7 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 				while ((line = br.readLine()) != null) {
 					ret.append(line);
 					ret.append(Strings.NEWLINE.val);
-					//ret.append("\n");
+					// ret.append("\n");
 				}
 				return ret.toString();
 			} catch (Exception e) {
