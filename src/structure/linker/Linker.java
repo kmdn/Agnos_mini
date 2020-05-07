@@ -4,9 +4,10 @@ import java.util.Collection;
 
 import structure.datatypes.Mention;
 import structure.interfaces.Weighable;
+import structure.utils.FunctionUtils;
 import structure.utils.Loggable;
 
-public interface Linker extends Weighable<Number>, Loggable {
+public interface Linker extends Weighable<Mention>, Loggable {
 
 	public boolean init();
 
@@ -27,5 +28,4 @@ public interface Linker extends Weighable<Number>, Loggable {
 	default int nullHash(Object o, int otherwise) {
 		return o == null ? otherwise : o.hashCode();
 	}
-
 }

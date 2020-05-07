@@ -22,6 +22,7 @@ import structure.datatypes.Mention;
 import structure.datatypes.MentionMarking;
 import structure.linker.AbstractLinkerURLPOST;
 import structure.linker.LinkerNIF;
+import structure.utils.FunctionUtils;
 
 public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNIF {
 	public Number defaultScore = 1.0d// getWeight()
@@ -45,12 +46,12 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 
 	@Override
 	public Number getWeight() {
-		return 100.0f;
+		return 1.0f;
 	}
 
 	@Override
-	public BiFunction<Number, Number, Number> getScoreModulationFunction() {
-		return null;
+	public BiFunction<Number, Mention, Number> getScoreModulationFunction() {
+		return FunctionUtils::returnScore;
 	}
 
 	@Override

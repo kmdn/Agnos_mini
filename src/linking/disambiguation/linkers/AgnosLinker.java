@@ -87,7 +87,7 @@ public class AgnosLinker extends AbstractLinkerLocal implements Loggable {
 	}
 
 	@Override
-	public BiFunction<Number, Number, Number> getScoreModulationFunction() {
+	public BiFunction<Number, Mention, Number> getScoreModulationFunction() {
 		return null;
 	}
 }

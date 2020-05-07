@@ -24,6 +24,27 @@ import structure.datatypes.PossibleAssignment;
 
 public class MentionUtils {
 
+	/**
+	 * Does a deep copy of mentions
+	 * 
+	 * @param mentions which to copy
+	 * @return deep copy of this collection of mentions
+	 */
+	public static Collection<? extends Mention> copyMentions(Collection<? extends Mention> mentions) {
+		final List<Mention> retMentions = Lists.newArrayList();
+		for (Mention m : mentions) {
+			retMentions.add(new Mention(m));
+		}
+		return retMentions;
+	}
+
+	/**
+	 * Displays similarities of the mentions to each other
+	 * 
+	 * @param similarityService
+	 * @param KG
+	 * @param mentions
+	 */
 	public static void displaySimilarities(final EntitySimilarityService similarityService, final EnumModelType KG,
 			List<Mention> mentions) {
 		if (similarityService == null) {
@@ -178,7 +199,8 @@ public class MentionUtils {
 						sb.append(Strings.NEWLINE.val);
 						sb.append("Found assignment: " + m.getAssignment());
 						sb.append(Strings.NEWLINE.val);
-						sb.append("Found Assignment's Score: " + m == null ? "mention<null>" : m.getAssignment() == null ? "mention.ass<null>" : m.getAssignment().getScore());
+						sb.append("Found Assignment's Score: " + m == null ? "mention<null>"
+								: m.getAssignment() == null ? "mention.ass<null>" : m.getAssignment().getScore());
 						sb.append(Strings.NEWLINE.val);
 						sb.append("--------------------------------------------------");
 						sb.append(Strings.NEWLINE.val);

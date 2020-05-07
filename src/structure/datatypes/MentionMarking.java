@@ -48,8 +48,8 @@ public class MentionMarking extends Mention {
 	public MentionMarking(final String inText, final ScoredAnnotation annotation) {
 		// String word, PossibleAssignment assignment, int offset, double
 		// detectionConfidence, String originalMention, String originalWithoutStopwords
-		this(annotation.toString(), new PossibleAssignment(annotation.getUri(), annotation.toString()), -1,
-				annotation.getConfidence(), annotation.toString(), annotation.toString());
+		this(annotation.toString(), new PossibleAssignment(annotation.getUri() // ,annotation.toString()
+		), -1, annotation.getConfidence(), annotation.toString(), annotation.toString());
 		updatePossibleAssignments(transformURIs2Assignment("", annotation));
 	}
 
@@ -57,10 +57,10 @@ public class MentionMarking extends Mention {
 		// String word, PossibleAssignment assignment, int offset, double
 		// detectionConfidence, String originalMention, String originalWithoutStopwords
 		this(inText.substring(namedEntity.getStartPosition(), namedEntity.getStartPosition() + namedEntity.getLength()),
-				new PossibleAssignment(namedEntity.getUri(),
-						inText.substring(namedEntity.getStartPosition(),
-								namedEntity.getStartPosition() + namedEntity.getLength())),
-				namedEntity.getStartPosition(), defaultConfidence,
+				new PossibleAssignment(namedEntity.getUri()
+				// ,inText.substring(namedEntity.getStartPosition(),
+				// namedEntity.getStartPosition() + namedEntity.getLength())
+				), namedEntity.getStartPosition(), defaultConfidence,
 				inText.substring(namedEntity.getStartPosition(),
 						namedEntity.getStartPosition() + namedEntity.getLength()),
 				inText.substring(namedEntity.getStartPosition(),
@@ -76,10 +76,10 @@ public class MentionMarking extends Mention {
 		// detectionConfidence, String originalMention, String originalWithoutStopwords
 		this(inText.substring(scoredNamedEntity.getStartPosition(),
 				scoredNamedEntity.getStartPosition() + scoredNamedEntity.getLength()),
-				new PossibleAssignment(scoredNamedEntity.getUri(),
-						inText.substring(scoredNamedEntity.getStartPosition(),
-								scoredNamedEntity.getStartPosition() + scoredNamedEntity.getLength())),
-				scoredNamedEntity.getStartPosition(), scoredNamedEntity.getConfidence(),
+				new PossibleAssignment(scoredNamedEntity.getUri()
+				// ,inText.substring(scoredNamedEntity.getStartPosition(),scoredNamedEntity.getStartPosition()
+				// + scoredNamedEntity.getLength())
+				), scoredNamedEntity.getStartPosition(), scoredNamedEntity.getConfidence(),
 				inText.substring(scoredNamedEntity.getStartPosition(),
 						scoredNamedEntity.getStartPosition() + scoredNamedEntity.getLength()),
 				inText.substring(scoredNamedEntity.getStartPosition(),
@@ -102,7 +102,8 @@ public class MentionMarking extends Mention {
 	public MentionMarking(final String inText, final Meaning meaning) {
 		// String word, PossibleAssignment assignment, int offset, double
 		// detectionConfidence, String originalMention, String originalWithoutStopwords
-		this("", new PossibleAssignment(meaning.getUri(), ""), -1, defaultConfidence, "", "");
+		this("", new PossibleAssignment(meaning.getUri()// ,""
+		), -1, defaultConfidence, "", "");
 		updatePossibleAssignments(transformURIs2Assignment("", meaning));
 	}
 
@@ -130,7 +131,8 @@ public class MentionMarking extends Mention {
 	private List<PossibleAssignment> transformURIs2Assignment(final String mention, final Meaning meaning) {
 		List<PossibleAssignment> possibleAssignments = Lists.newArrayList();
 		for (String uri : meaning.getUris()) {
-			final PossibleAssignment possAss = new PossibleAssignment(uri, mention);
+			final PossibleAssignment possAss = new PossibleAssignment(uri// , mention
+			);
 			possAss.setScore(defaultScore);
 			possibleAssignments.add(possAss);
 		}

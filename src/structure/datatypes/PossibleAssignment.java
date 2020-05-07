@@ -17,24 +17,37 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	private static Logger logger = Logger.getLogger(PossibleAssignment.class);
 	private Number score = Float.valueOf(0f);
 	private final String assignment;
-	private final String mentionToken;
+	// private final String mentionToken;
 	private boolean computedScore = false;
 	private boolean warned = false;
 
-	public static PossibleAssignment createNew(final String assignment, final String mentionToken) {
+	public static PossibleAssignment createNew(final String assignment// , final String mentionToken
+	) {
 		// return new PossibleAssignment(new Resource(assignment, false).toN3(),
 		// mentionToken);
-		return new PossibleAssignment(assignment, mentionToken);
+		return new PossibleAssignment(assignment// , mentionToken
+		);
 	}
 
-	public PossibleAssignment(final String assignment, final String mentionToken) {
-		this(assignment, mentionToken, 0.0f);
+	public PossibleAssignment(final String assignment// , final String mentionToken
+	) {
+		this(assignment, // mentionToken,
+				0.0f);
 	}
 
-	public PossibleAssignment(final String assignment, final String mentionToken, final Number score) {
+	public PossibleAssignment(final String assignment// , final String mentionToken
+			, final Number score) {
 		this.assignment = assignment;
-		this.mentionToken = mentionToken;
+		// this.mentionToken = mentionToken;
 		this.score = score;
+	}
+
+	public PossibleAssignment(final PossibleAssignment toCopy) {
+		this.assignment = toCopy.assignment;
+		this.score = toCopy.score;
+		// Likely not really used but myah
+		this.computedScore = toCopy.computedScore;
+		this.warned = toCopy.warned;
 	}
 
 	@Override
@@ -52,14 +65,16 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 			@SuppressWarnings("rawtypes")
 			final PossibleAssignment ass = ((PossibleAssignment) obj);
 			return this.score.equals(ass.score) && this.assignment.equals(ass.assignment)
-					&& this.mentionToken.equals(ass.mentionToken);
+			// && this.mentionToken.equals(ass.mentionToken)
+			;
 		}
 		return super.equals(obj);
 	}
 
 	@Override
 	public int hashCode() {
-		return 23 * (this.assignment.hashCode() + this.score.hashCode() + this.mentionToken.hashCode());
+		return 23 * (this.assignment.hashCode() + this.score.hashCode() // + this.mentionToken.hashCode()
+		);
 	}
 
 	@Override
@@ -76,9 +91,9 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 		return this.score;
 	}
 
-	public String getMentionToken() {
-		return mentionToken;
-	}
+	// public String getMentionToken() {
+	// return mentionToken;
+	// }
 
 	public void setScore(final Number score) {
 		this.score = score;

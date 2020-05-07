@@ -55,8 +55,9 @@ public class MergeableMention extends Mention {
 	@Override
 	public void updatePossibleAssignments(Collection<PossibleAssignment> possibleAssignments) {
 		for (PossibleAssignment possAss : possibleAssignments) {
-			final MergeablePossibleAssignment copyAssignment = new MergeablePossibleAssignment(possAss.getAssignment(),
-					possAss.getMentionToken());
+			final MergeablePossibleAssignment copyAssignment = new MergeablePossibleAssignment(possAss.getAssignment()
+					//,possAss.getMentionToken()
+					);
 			copyAssignment.setScore(possAss.getScore());
 			this.possibleAssignments.put(copyAssignment, copyAssignment);
 		}

@@ -45,7 +45,8 @@ public class CandidateGeneratorMap implements CandidateGenerator, Loggable {
 		}
 		final List<PossibleAssignment> ret = Lists.newArrayList();
 		for (String entity : possibleEntities) {
-			ret.add(PossibleAssignment.createNew(entity, mention.getMention()));
+			ret.add(PossibleAssignment.createNew(entity// , mention.getMention()
+			));
 		}
 
 		return ret;

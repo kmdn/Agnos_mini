@@ -16,6 +16,7 @@ import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.linker.AbstractLinkerURLGET;
+import structure.utils.FunctionUtils;
 
 public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 	/*
@@ -109,7 +110,8 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 					final String surfaceForm = obj.getString(keySurfaceForm);
 					final Double score = obj.getDouble(keySimilarityScore);
 					final String uri = obj.getString(keyURI);
-					final PossibleAssignment possAss = new PossibleAssignment(uri, surfaceForm, score);
+					final PossibleAssignment possAss = new PossibleAssignment(uri, // surfaceForm,
+							score);
 					final Mention mention = new Mention(surfaceForm, possAss, offset, this.confidence, surfaceForm,
 							surfaceForm);
 
@@ -140,7 +142,7 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 	}
 
 	@Override
-	public BiFunction<Number, Number, Number> getScoreModulationFunction() {
-		return null;
+	public BiFunction<Number, Mention, Number> getScoreModulationFunction() {
+		return FunctionUtils::returnScore;
 	}
 }

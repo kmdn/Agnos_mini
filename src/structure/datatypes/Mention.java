@@ -42,6 +42,7 @@ public class Mention implements Loggable {
 
 	/**
 	 * Copy constructor
+	 * 
 	 * @param mention
 	 */
 	public Mention(Mention mention) {
@@ -52,16 +53,16 @@ public class Mention implements Loggable {
 		this.originalWithoutStopwords = mention.getOriginalWithoutStopwords();
 		this.possibleAssignments = new ArrayList<>();
 		for (PossibleAssignment assignment : mention.getPossibleAssignments()) {
-			this.possibleAssignments.add(new PossibleAssignment(assignment.getAssignment(),
-					assignment.getMentionToken(), assignment.getScore()));
+			this.possibleAssignments.add(new PossibleAssignment(assignment));
 		}
 		assignBest();
 	}
 
 	@Override
 	public String toString() {
-		return "[" + getMention() + "/" + getOriginalMention() + "/" + getOriginalWithoutStopwords()
-				+ this.assignment == null ? "no assngmt" : this.assignment + "]";
+		return "[" + getMention() + "/" + getOriginalMention() + "/" + getOriginalWithoutStopwords() + " Chosen{"
+				+ (this.assignment == null ? "no assngmt" : this.assignment) + "}" + " - Possible{"
+				+ this.possibleAssignments + "} ]";
 	}
 
 	/**

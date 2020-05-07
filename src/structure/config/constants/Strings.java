@@ -10,13 +10,14 @@ public enum Strings {
 	// Attempting to keep a specific order
 	// From most-common to most-specific
 	// ROOTPATH("/vol1/tomcat/webapps/AgnosNIFAPI/project_files/"), //
-	SHETLAND_DIR("/vol2/kris/"),///home/noulletk/prog/bmw/"), //
+	SHETLAND_DIR("/vol2/kris/"), /// home/noulletk/prog/bmw/"), //
 	SEELAND_DIR("/vol1/data_faerberm/kris/prog/"
 	// "/vol2/kris/"//
 	), //
 	LOCAL_DIR("./"), //
 	ROOTPATH(SHETLAND_DIR.val), //
 	NEWLINE(System.getProperty("line.separator")), //
+	BABELFY_KEY("c59c564f-cdea-4ed7-9e38-fdd5b5d0c584", "Babelfy API key"), //
 	CSV_DELIM(";"), //
 	CRM_PRED_NEWS("http://km.aifb.kit.edu/services/crunchbase/api-vocab#news",
 			"Crummymatch's predicate for finding news"), //
@@ -65,6 +66,7 @@ public enum Strings {
 	// LSH-Relevant code
 	LSH_HASH_DELIMITER("\t;\t"),//
 	;
+
 	public final String val;
 	public final String desc;
 
