@@ -10,7 +10,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import structure.config.constants.Strings;
 import structure.config.kg.EnumModelType;
@@ -19,6 +21,25 @@ import structure.datatypes.Mention;
 public abstract class AbstractLinkerURL extends AbstractLinker implements LinkerURL {
 	protected final Map<String, String> params = new HashMap<>();
 
+	/**
+	 * Just does a ".get(key)" on the parameter map
+	 * 
+	 * @param paramKey key which a param was stored as
+	 * @return
+	 */
+	protected String injectParam(final String paramKey) {
+		return this.params.get(paramKey);
+	}
+
+	/**
+	 * Returns a COPY of the parameter map's keys
+	 * 
+	 * @return copy of keys for the parameter map
+	 */
+	protected Set<String> getParameterKeys() {
+		return new HashSet<>(this.params.keySet());
+	}
+
 	private int timeout = 1_000_000;
 	private String url = null;
 	private String suffix = null;
@@ -26,7 +47,6 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 
 	public AbstractLinkerURL(EnumModelType KG) {
 		super(KG);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**

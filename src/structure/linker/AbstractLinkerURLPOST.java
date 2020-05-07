@@ -4,8 +4,6 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
 import structure.config.kg.EnumModelType;
 
@@ -18,7 +16,7 @@ public abstract class AbstractLinkerURLPOST extends AbstractLinkerURL implements
 	protected void setupRequestMethod(final HttpURLConnection conn) throws ProtocolException {
 		conn.setRequestMethod("POST");
 	}
-	
+
 	@Override
 	protected URI makeURI() throws URISyntaxException {
 		return makeURI(null);

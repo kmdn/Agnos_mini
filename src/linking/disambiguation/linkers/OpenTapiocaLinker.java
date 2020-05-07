@@ -64,7 +64,7 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 		// -----------------------------------
 
 		final String nifInput = createNIF(input);
-		setParam("content", nifInput);
+		setParam(paramContent, nifInput);
 		// setParam(paramContent, input);
 		// setParam(confidenceKeyword, confidence);
 		final HttpURLConnection conn = openConnectionWParams();
@@ -126,7 +126,7 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 			getLogger().error("ERROR - OpenTapioca only handles a single parameter (namely the content)");
 		}
 
-		final String nifContent = this.params.get(paramContent);
+		final String nifContent = injectParam(paramContent);
 		if (nifContent != null) {
 			return nifContent;
 		}
