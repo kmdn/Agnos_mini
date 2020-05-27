@@ -43,6 +43,13 @@ public interface LinkerURL extends Linker {
 	public LinkerURL timeout(final int timeout);
 
 	/**
+	 * Set the port number to connect to
+	 * @param port to connect to
+	 * @return chaining pattern
+	 */
+	public LinkerURL port(final int port);
+	
+	/**
 	 * Sets specific parameter with given value
 	 * 
 	 * @param paramName  parameter name

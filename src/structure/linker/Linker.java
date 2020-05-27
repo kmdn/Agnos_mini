@@ -11,9 +11,9 @@ public interface Linker extends Weighable<Mention>, Loggable {
 
 	public boolean init();
 
-	public String annotate(final String input);
+	public String annotate(final String input) throws Exception;
 
-	public Collection<Mention> annotateMentions(final String input);
+	public Collection<Mention> annotateMentions(final String input) throws Exception;
 
 	public String getKG();
 

@@ -17,7 +17,8 @@ public enum Strings {
 	LOCAL_DIR("./"), //
 	ROOTPATH(SHETLAND_DIR.val), //
 	NEWLINE(System.getProperty("line.separator")), //
-	BABELFY_KEY("c59c564f-cdea-4ed7-9e38-fdd5b5d0c584", "Babelfy API key"), //
+	BABELFY_KEY(//"c59c564f-cdea-4ed7-9e38-fdd5b5d0c584"
+			"accef450-9f45-4157-adb1-34c3ada2b4d4", "Babelfy API key"), //
 	CSV_DELIM(";"), //
 	CRM_PRED_NEWS("http://km.aifb.kit.edu/services/crunchbase/api-vocab#news",
 			"Crummymatch's predicate for finding news"), //

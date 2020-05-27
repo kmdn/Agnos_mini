@@ -1,11 +1,56 @@
 package structure.utils;
 
+import java.io.IOException;
+
+import org.tartarus.snowball.SnowballProgram;
+import org.tartarus.snowball.ext.EnglishStemmer;
+
 public class TextUtils {
 
 	private static final char arrow_start = '<';
 	private static final char arrow_end = '>';
 	private static final char doubleQuote = '"';
 	private static final char atSign = '@';
+
+	/**
+	 * Stems given input by applying the following delimiters: ".,;: "
+	 * 
+	 * @param input input to tokenize and stem
+	 * @return tokenized version of input
+	 * @throws IOException
+	 */
+	public static String stem(String input) {
+		return stem(input, "[\\p{Punct}\\p{Space}]");
+	}
+
+	/**
+	 * Stems given input (split by delimiters) tokens
+	 * 
+	 * @param input      to stem
+	 * @param regexDelim delimiters by which to tokenize
+	 * @return stemmed (concatenated) version of input
+	 * @throws IOException
+	 */
+	public static String stem(String input, final String regexDelim) {
+		final SnowballProgram stemmer = new EnglishStemmer();
+		final StringBuilder sbRet = new StringBuilder();
+		final String[] tokens = input.split(regexDelim);
+
+		if (tokens.length > 0) {
+			stemmer.setCurrent(tokens[0]);
+			stemmer.stem();
+			sbRet.append(stemmer.getCurrent());
+		}
+		for (int i = 1; i < tokens.length; ++i) {
+			stemmer.setCurrent(tokens[i]);
+			stemmer.stem();
+			final String stem = stemmer.getCurrent();
+			sbRet.append(" ");
+			sbRet.append(stem);
+		}
+
+		return sbRet.toString();
+	}
 
 	public static String smallText(String text) {
 		final int length = 50;

@@ -1,5 +1,6 @@
 package launcher.debug;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,12 +20,16 @@ public class LauncherTestDBpediaLinking {
 
 	public static void main(String[] args) {
 		final String input = "Steve Jobs and Joan Baez are famous people";
-		consolidateTest();
-		// singleOpenTapioca(input);
-		// singleDBpedia();
+		try {
+			consolidateTest();
+			// singleOpenTapioca(input);
+			// singleDBpedia();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-	private static void singleOpenTapioca(final String input) {
+	private static void singleOpenTapioca(final String input) throws Exception {
 		final Linker linker = new OpenTapiocaLinker();
 		// final String ret = linker.annotate("Steve Jobs and Joan Baez are famous
 		// people");
@@ -35,7 +40,7 @@ public class LauncherTestDBpediaLinking {
 		System.out.println("Res: " + ret);
 	}
 
-	private static void singleDBpedia() {
+	private static void singleDBpedia() throws IOException {
 		final DBpediaSpotlightLinker linker = new DBpediaSpotlightLinker();
 		// final String ret = linker.annotate("Steve Jobs and Joan Baez are famous
 		// people");

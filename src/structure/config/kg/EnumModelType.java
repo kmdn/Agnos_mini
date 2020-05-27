@@ -17,8 +17,7 @@ public enum EnumModelType {
 
 	// FREEBASE(Strings.ROOTPATH.val + "freebase/", EntityQuery.DEFAULT), //
 
-	CRUNCHBASE(Strings.ROOTPATH.val + "crunchbase2018/",
-	EntityQuery.CRUNCHBASE2), //
+	CRUNCHBASE(Strings.ROOTPATH.val + "crunchbase2018/", EntityQuery.CRUNCHBASE2), //
 
 	// CRUNCHBASE2(Strings.ROOTPATH.val + "crunchbase2015/",
 	// EntityQuery.CRUNCHBASE2), //
@@ -26,6 +25,7 @@ public enum EnumModelType {
 	// MAG(Strings.ROOTPATH.val + "mag/", EntityQuery.MAG), //
 	// DBLP(Strings.ROOTPATH.val + "dblp/", EntityQuery.DBLP), //
 	WIKIDATA(Strings.ROOTPATH.val + "wikidata/", EntityQuery.WIKIDATA), //
+	WORDNET(Strings.ROOTPATH.val + "wordnet/", EntityQuery.DEFAULT), //
 	DEFAULT(Strings.ROOTPATH.val + "default/", EntityQuery.DEFAULT) //
 	;
 

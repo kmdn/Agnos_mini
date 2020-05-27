@@ -7,25 +7,18 @@ import java.net.ProtocolException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.BiFunction;
-
-import org.aksw.gerbil.io.nif.impl.AgnosTurtleNIFParser;
-import org.aksw.gerbil.transfer.nif.Document;
-import org.aksw.gerbil.transfer.nif.Marking;
-import org.aksw.gerbil.transfer.nif.TurtleNIFDocumentParser;
-
-import com.beust.jcommander.internal.Lists;
 
 import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
-import structure.datatypes.MentionMarking;
+import structure.linker.AbstractLinkerURL;
 import structure.linker.AbstractLinkerURLPOST;
 import structure.linker.LinkerNIF;
 import structure.utils.FunctionUtils;
+import structure.utils.LinkerUtils;
 
 public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNIF {
-	public Number defaultScore = 1.0d// getWeight()
+	public Number defaultScore = 0.5d;// 1.0d// getWeight()
 	;
 
 	public OpenTapiocaLinker() {
@@ -93,30 +86,9 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 	}
 
 	@Override
-	protected Collection<Mention> textToMentions(String annotatedText) {
+	public Collection<Mention> textToMentions(String annotatedText) {
 		// Transform nif to another format
-		final Collection<Mention> retMentions = Lists.newArrayList();
-		final TurtleNIFDocumentParser parser = new TurtleNIFDocumentParser(new AgnosTurtleNIFParser());
-		final Document document;
-		try {
-			document = parser.getDocumentFromNIFString(annotatedText);
-			// getDocumentFromNIFStream(inputStream);
-			final List<Marking> markings = document.getMarkings();
-			for (Marking m : markings) {
-				// https://github.com/dice-group/gerbil/wiki/Document-Markings-in-gerbil.nif.transfer
-				final Mention mention = MentionMarking.create(document.getText(), m);
-				mention.assignBest();
-				mention.getAssignment().setScore(defaultScore);
-
-				if (mention != null) {
-					retMentions.add(mention);
-				}
-			}
-		} catch (Exception e) {
-			getLogger().error("Exception while processing request's return.", e);
-			return null;
-		}
-		return retMentions;
+		return LinkerUtils.nifToMentions(annotatedText, defaultScore);
 	}
 
 	@Override
@@ -155,6 +127,17 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 		} catch (IOException e) {
 			getLogger().error(e.getLocalizedMessage());
 		}
+	}
+
+	@Override
+	public String getText() {
+		return this.params.get(this.paramContent);
+	}
+
+	@Override
+	public AbstractLinkerURL setText(final String inputText) {
+		this.params.put(this.paramContent, inputText);
+		return this;
 	}
 
 	@Override

@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.tartarus.snowball.SnowballProgram;
+import org.tartarus.snowball.ext.englishStemmer;
 
 import com.google.common.collect.Lists;
 
@@ -23,6 +25,7 @@ import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 
 public class MentionUtils {
+
 
 	/**
 	 * Does a deep copy of mentions

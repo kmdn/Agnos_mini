@@ -20,6 +20,7 @@ import structure.datatypes.Mention;
 
 public abstract class AbstractLinkerURL extends AbstractLinker implements LinkerURL {
 	protected final Map<String, String> params = new HashMap<>();
+	protected int documentCounter = 0;
 
 	/**
 	 * Just does a ".get(key)" on the parameter map
@@ -32,6 +33,21 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 	}
 
 	/**
+	 * Sets the input text...
+	 * 
+	 * @param inputText input text to set
+	 * @return the current instance
+	 */
+	public abstract AbstractLinkerURL setText(final String inputText);
+
+	/**
+	 * Gets the input text
+	 * 
+	 * @return input text
+	 */
+	public abstract String getText();
+
+	/**
 	 * Returns a COPY of the parameter map's keys
 	 * 
 	 * @return copy of keys for the parameter map
@@ -40,10 +56,13 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 		return new HashSet<>(this.params.keySet());
 	}
 
+	private final int invalidPort = -1;
+	private final String defaultScheme = http;
 	private int timeout = 1_000_000;
 	private String url = null;
 	private String suffix = null;
-	private String scheme = http;
+	private String scheme = defaultScheme;
+	private int port = invalidPort;
 
 	public AbstractLinkerURL(EnumModelType KG) {
 		super(KG);
@@ -129,7 +148,7 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 	 * @param annotatedText annotated text
 	 * @return collection of mentions for further processing
 	 */
-	protected abstract Collection<Mention> textToMentions(final String annotatedText);
+	public abstract Collection<Mention> textToMentions(final String annotatedText);
 
 	/**
 	 * Parameters that are defined in the parameters map are now injected into a
@@ -142,30 +161,29 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 	protected abstract String injectParams();
 
 	@Override
-	public Collection<Mention> annotateMentions(final String input) {
+	public Collection<Mention> annotateMentions(final String input) throws IOException {
 		final String annotatedText = annotate(input);
 		return textToMentions(annotatedText);
 	}
 
 	@Override
-	public String annotate(final String input) {
+	public String annotate(final String input) throws IOException {
+		documentCounter++;
 		try {
 			final HttpURLConnection conn = openConnection(input);
 
 			try (final InputStreamReader is = new InputStreamReader(conn.getInputStream());
 					final BufferedReader br = new BufferedReader(is)) {
 				String line = null;
-				StringBuilder ret = new StringBuilder();
+				final StringBuilder ret = new StringBuilder();
 				while ((line = br.readLine()) != null) {
 					ret.append(line);
 					ret.append(Strings.NEWLINE.val);
 					// ret.append("\n");
 				}
 				return ret.toString();
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
-		} catch (NumberFormatException | URISyntaxException | IOException nfe) {
+		} catch (NumberFormatException | URISyntaxException nfe) {
 			nfe.printStackTrace();
 		}
 		return null;
@@ -187,7 +205,15 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 	 * @throws URISyntaxException
 	 */
 	public URI makeURI(final String query) throws URISyntaxException {
-		return new URI(getScheme(), getUrl(), getSuffix(), query, null);
+		if (this.port != invalidPort) {
+			return new URI(getScheme(), null, getUrl(), getPort(), getSuffix(), query, null);
+		} else {
+			return new URI(getScheme(), getUrl(), getSuffix(), query, null);
+		}
+	}
+
+	private int getPort() {
+		return this.port;
 	}
 
 	@Override
@@ -205,6 +231,12 @@ public abstract class AbstractLinkerURL extends AbstractLinker implements Linker
 	@Override
 	public AbstractLinkerURL url(final String url) {
 		this.url = url;
+		return this;
+	}
+
+	@Override
+	public LinkerURL port(final int port) {
+		this.port = port;
 		return this;
 	}
 

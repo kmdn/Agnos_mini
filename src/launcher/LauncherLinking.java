@@ -15,10 +15,12 @@ public class LauncherLinking {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
-	private void run() throws InterruptedException, IOException {
+	private void run() throws Exception {
 		final EnumModelType KG = EnumModelType.//
 		// WIKIDATA//
 		// DBPEDIA_FULL//
