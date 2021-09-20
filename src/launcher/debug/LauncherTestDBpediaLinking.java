@@ -21,9 +21,9 @@ public class LauncherTestDBpediaLinking {
 	public static void main(String[] args) {
 		final String input = "Steve Jobs and Joan Baez are famous people";
 		try {
-			consolidateTest();
-			// singleOpenTapioca(input);
-			// singleDBpedia();
+			// consolidateTest();
+			singleOpenTapioca(input);
+			//singleDBpedia();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

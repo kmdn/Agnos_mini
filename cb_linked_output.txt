@@ -1,48 +1,12 @@
 Mention[Joan Baez; 1.0] 
 Original Text:Joan Baez
-Possible assignments: 2
-Found assignment: http://dbpedia.org/resource/Joan_Baez / 290.71428571178365
-290.71428571178365
+Possible assignments: 1
+Found assignment: http://www.wikidata.org/entity/Q131725 / 0.5
+0.5
 --------------------------------------------------
-Mention[Joan; 0.0] 
-Original Text:Joan
-Possible assignments: 2
-Found assignment:  / 0.0
-0.0
---------------------------------------------------
-Mention[Jobs; 1.0] 
-Original Text:Jobs
-Possible assignments: 2
-Found assignment: http://dbpedia.org/resource/Jobs_(film) / 142.85714285714286
-142.85714285714286
---------------------------------------------------
-Mention[Steve Jobs; 0.8181818181818182] 
+Mention[Steve Jobs; 1.0] 
 Original Text:Steve Jobs
-Possible assignments: 2
-Found assignment: http://dbpedia.org/resource/Steve_Jobs / 433.5714278348979
-433.5714278348979
---------------------------------------------------
-Mention[Steve; 1.0] 
-Original Text:Steve
-Possible assignments: 2
-Found assignment: http://dbpedia.org/resource/Stephen / 142.85714285714286
-142.85714285714286
---------------------------------------------------
-Mention[famous people; 1.0] 
-Original Text:famous people
-Possible assignments: 2
-Found assignment: http://dbpedia.org/resource/Celebrity / 285.7142857142857
-285.7142857142857
---------------------------------------------------
-Mention[famous; 1.0] 
-Original Text:famous
-Possible assignments: 2
-Found assignment:  / 142.85714285714286
-142.85714285714286
---------------------------------------------------
-Mention[people; 0.0] 
-Original Text:people
-Possible assignments: 2
-Found assignment: http://dbpedia.org/resource/People / 0.0
-0.0
+Possible assignments: 1
+Found assignment: http://www.wikidata.org/entity/Q19837 / 0.5
+0.5
 --------------------------------------------------

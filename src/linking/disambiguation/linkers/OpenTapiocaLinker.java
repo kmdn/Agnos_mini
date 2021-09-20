@@ -88,6 +88,7 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 	@Override
 	public Collection<Mention> textToMentions(String annotatedText) {
 		// Transform nif to another format
+		System.out.println(annotatedText);
 		return LinkerUtils.nifToMentions(annotatedText, defaultScore);
 	}
 

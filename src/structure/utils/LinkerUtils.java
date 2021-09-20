@@ -8,6 +8,7 @@ import org.aksw.gerbil.io.nif.impl.AgnosTurtleNIFParser;
 import org.aksw.gerbil.transfer.nif.Document;
 import org.aksw.gerbil.transfer.nif.Marking;
 import org.aksw.gerbil.transfer.nif.TurtleNIFDocumentParser;
+import org.apache.logging.log4j.util.Strings;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -197,6 +198,7 @@ public class LinkerUtils {
 		 */
 		final Collection<Mention> ret = new ArrayList<>();
 		try {
+			System.out.println(annotatedText);
 			final JSONObject json = new JSONObject(annotatedText);
 			// Different resources
 			final String keyMention = "Resources";
@@ -314,7 +316,7 @@ public class LinkerUtils {
 			totalLength += len;
 		}
 		// doc ID
-		// features.add("" + docCounter);
+		features.add(docCounter);
 		// text length
 		features.add(inText.length());
 		// number of tokens
@@ -340,94 +342,129 @@ public class LinkerUtils {
 	public static String featuresToStr(List<Object> features) {
 		final StringBuilder sbFeatures = new StringBuilder();
 		for (int i = 0; i < features.size(); ++i) {
+			try {
 			sbFeatures.append(features.get(i).toString());
+			} catch (NullPointerException npe)
+			{
+				System.out.println("NPE - Why?");
+				System.out.println("features: "+features);
+				System.out.println("Feature w/ issue: "+features.get(i));
+				throw npe;
+			}
 			sbFeatures.append(",");
 		}
 		return sbFeatures.toString();
 	}
 
-	private static final List<Object> defaultDebugList = Lists.newArrayList(new Object[] { //
-			"1", "2", "3", "4", "5", //"NIL", "NIL", "NIL", "NIL", //
-			"6", "7", "8", "9", "10", //
+	
+	private static final List<Object> defaultListForDebugging = Lists.newArrayList(new Object[] { //
+			"<babelfy>", "<babelsynsetID>", "3", 4d, "5", // "NIL", "NIL", "NIL", "NIL", //
+			"6", 7d, "8", 9d, 10, //
 			"11", "12", "13", "14", "15", //
-			"16", "17", "18", "19", "20", //
-			"21", "22", "23", "24", "25" //
+			"<dbpedia>", "17_type", "18_type", "19_type", "20_type", //
+			"21_type", "22", "23", "24", "25", //
+			26d, "27", 28d, 29, "30", //
+			"<openTapioca>", "32", "33", 34.4, "35", //
+			36d, 37, "38", "39", 40d, //
+			"41", "42", "43", "44", "45", //
 	});
 
-	private static final List<Object> defaultList = Lists.newArrayList(new Object[] { //
-			"1", "2", -1d, "4", -1d, //"NIL", "NIL", "NIL", "NIL", //
-			-1, "7", "8", "9", "10", //
-			"11", "12", "13", "14", "15", //
-			//"16", "17", "18", "19", "20", //
-			//"21", "22", "23", "24", "25" //
+	public static final List<Object> defaultList = Lists.newArrayList(new Object[] { //
+			"", "", "", -1337d, "", // "NIL", "NIL", "NIL", "NIL", //
+			"", -1337d, "", -1337d, -1337, //
+			"", "", "", "", "", //
+			"", "", "", "", "", //
+			"", "", "", "", "", //
+			-1337d, "", -1337d, -1337, "", //
+			"", "", "", -1337d, "", //
+			-1337d, -1337, "", "", -1337d, //
+			"", "", "", "", "", //
 	});
+	private static final int allocatedSpace = defaultList.size() / 3;/// requests.size();
 
-	public static List<Object> toFeatures(final FeatureStringable fs) {
-		// Each linker gets 15 spots
-
+	public static List<Object> toFeatures(final List<FeatureStringable> requests) {
 		final List<Object> ret = Lists.newArrayList();
-		if (fs == null) {
-			// Fill list enough so that it is greater or equal to the size of the largest
-			// linker's data
+		if (requests == null || requests.size() == 0) {
 			ret.addAll(defaultList);
+			return ret;
 		}
-		if (fs instanceof Mention) {
-			final Mention mention = (Mention) fs;
-//			ret.add(mention.getMention());
-//			ret.add(mention.getOffset());
-			ret.add(mention.getOriginalMention());
-			ret.add(mention.getOriginalWithoutStopwords());
-			ret.add(mention.getDetectionConfidence());
-			ret.add(mention.getAssignment().getAssignment());
-			ret.add(mention.getAssignment().getScore());
-			ret.add(mention.getPossibleAssignments() == null ? 0 : mention.getPossibleAssignments().size());
+		if (defaultList.size() % requests.size() != 0) {
+			// throw new RuntimeException
+			System.err.println("Error - Default list size is not a multiple of requests[" + requests.size() + "]: "
+					+ Strings.LINE_SEPARATOR + requests);
 		}
 
-		if (fs instanceof MentionBabelfy) {
-			final MentionBabelfy mention = (MentionBabelfy) fs;
-			ret.add("Babelfy");
-			ret.add(mention.getBabelfyBabelSynsetID());
-			ret.add(mention.getBabelfySource());
-			ret.add(mention.getBabelfyGlobalScore());
-		} else if (fs instanceof MentionDBpediaSpotlight) {
-			final MentionDBpediaSpotlight mention = (MentionDBpediaSpotlight) fs;
+		final List<Object> allocatedData = Lists.newArrayList(defaultList);
+		for (int i = 0; i < requests.size(); ++i) {
+			final FeatureStringable fs = requests.get(i);
+			int addCounter;
+			if (fs == null) {
+				continue;
+			}
+			int initCounterVal;
+			if (fs instanceof MentionBabelfy) {
+				addCounter = 0 * allocatedSpace;
+				initCounterVal = addCounter;
+				final MentionBabelfy mention = (MentionBabelfy) fs;
+				allocatedData.set(addCounter++, "Babelfy");
+				allocatedData.set(addCounter++, mention.getBabelfyBabelSynsetID());
+				allocatedData.set(addCounter++, mention.getBabelfySource());
+				allocatedData.set(addCounter++, mention.getBabelfyGlobalScore());
+			} else if (fs instanceof MentionDBpediaSpotlight) {
+				final MentionDBpediaSpotlight mention = (MentionDBpediaSpotlight) fs;
+				addCounter = 1 * allocatedSpace;
+				initCounterVal = addCounter;
 
-			// Linker-level features
-			ret.add("DBpediaSpotlight");
-//			ret.add(mention.getOffset());
-//			ret.add(mention.getAssignment().getAssignment());
-//			ret.add(mention.getAssignment().getScore());
+				// Linker-level features
+				allocatedData.set(addCounter++, "DBpediaSpotlight");
+//				ret.add(mention.getOffset());
+//				ret.add(mention.getAssignment().getAssignment());
+//				ret.add(mention.getAssignment().getScore());
 
-			// Mention-level features (specific by linker)
-			// Add types
-			final String[] types = mention.getTypes().split(",");
-			for (int i = 0; i < 5; ++i) {
-				if (i < types.length) {
-					ret.add(types[i]);
-				} else {
-					ret.add("NIL");
+				// Mention-level features (specific by linker)
+				// Add types
+				final String[] types = mention.getTypes().split(",");
+				for (int k = 0; k < 5; ++k) {
+					if (k < types.length && types[k].length() > 0) {
+						allocatedData.set(addCounter++, types[k]);
+					} else {
+						allocatedData.set(addCounter++, "NO_TYPE");
+					}
 				}
+				allocatedData.set(addCounter++, mention.getSupport().toString());
+				allocatedData.set(addCounter++, mention.getScoreSecond().toString());
+			} else if (fs instanceof MentionOpenTapioca) {
+				addCounter = 2 * allocatedSpace;
+				initCounterVal = addCounter;
+
+				final MentionOpenTapioca mention = (MentionOpenTapioca) fs;
+				allocatedData.set(addCounter++, "OpenTapioca");
+			} else {
+				addCounter = allocatedSpace - 6;
+				initCounterVal = addCounter;
 			}
 
-			ret.add(mention.getSupport().toString());
-			ret.add(mention.getScoreSecond().toString());
+			// Add linker-specific general mention stuff
+			if (fs instanceof Mention) {
+				final Mention mention = (Mention) fs;
+//				ret.add(mention.getMention());
+//				ret.add(mention.getOffset());
+				allocatedData.set(addCounter++, mention.getOriginalMention());
+				allocatedData.set(addCounter++, mention.getOriginalWithoutStopwords());
+				allocatedData.set(addCounter++, mention.getDetectionConfidence());
+				allocatedData.set(addCounter++, mention.getAssignment().getAssignment());
+				allocatedData.set(addCounter++, mention.getAssignment().getScore());
+				allocatedData.set(addCounter++,
+						mention.getPossibleAssignments() == null ? 0 : mention.getPossibleAssignments().size());
+			}
 
-		} else if (fs instanceof MentionOpenTapioca) {
-			final MentionOpenTapioca mention = (MentionOpenTapioca) fs;
-			ret.add("OpenTapioca");
+			if (addCounter - initCounterVal > allocatedSpace) {
+				throw new RuntimeException("Increase allocation space [Current[" + allocatedSpace + "], Required["
+						+ (addCounter - initCounterVal) + "]]: " + Strings.LINE_SEPARATOR + fs + Strings.LINE_SEPARATOR
+						+ allocatedData);
+			}
 		}
-
-		// Filler the rest of the space for this linker with random stuff
-		final int toFill = defaultList.size() - ret.size();
-		if (toFill < 0) {
-			System.err.println(ret);
-			throw new RuntimeException("Insufficient default list size(" + defaultList.size() + ") - increase it by "
-					+ Math.abs(toFill) + " to at least [" + ret.size() + "]");
-		}
-		for (int i = ret.size(); i < defaultList.size(); ++i) {
-			ret.add(defaultList.get(i));
-		}
-
-		return ret;
+		return allocatedData;
 	}
+
 }

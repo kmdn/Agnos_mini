@@ -10,13 +10,27 @@ import java.util.List;
 import structure.utils.Loggable;
 
 public class Mention implements Loggable {
-	protected String mention;
+	
+	// Disambiguated annotation
 	protected PossibleAssignment assignment;
+	
+	// Position in text
 	protected int offset = -1;
+	
+	// 
 	protected double detectionConfidence = -1;
+	
+	// Candidates
 	protected Collection<PossibleAssignment> possibleAssignments;
-	protected final String originalMention;
-	protected final String originalWithoutStopwords;
+	
+	// Surface form
+	protected String mention;//Steve Jobs
+
+	// Original text
+	protected final String originalMention;//Stevve and Jobs
+	
+	// ... excluding stop words
+	protected final String originalWithoutStopwords;//Stevve Jobs
 
 	public Mention(final String word, final PossibleAssignment assignment, final int offset,
 			final double detectionConfidence, final String originalMention, final String originalWithoutStopwords) {

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -26,7 +27,12 @@ import com.beust.jcommander.internal.Lists;
 import linking.disambiguation.linkers.BabelfyLinker;
 import linking.disambiguation.linkers.DBpediaSpotlightLinker;
 import linking.disambiguation.linkers.OpenTapiocaLinker;
+import linking.mentiondetection.exact.HashMapCaseInsensitive;
 import structure.datatypes.Mention;
+import structure.datatypes.MentionBabelfy;
+import structure.datatypes.MentionDBpediaSpotlight;
+import structure.datatypes.MentionOpenTapioca;
+import structure.datatypes.PossibleAssignment;
 import structure.interfaces.FeatureStringable;
 import structure.linker.AbstractLinkerURL;
 import structure.linker.Linker;
@@ -36,7 +42,30 @@ public class LauncherCoNLLBuildFeatures {
 
 	private static final String outDir = "C:/Users/wf7467/Desktop/Evaluation Datasets/CoNLL_2011_Orchestration";
 
+	private final static Map<String, String> classToWekaMappings = new HashMapCaseInsensitive<String>();
+
+	private static final Set<String> toIgnore = new HashSet<>();
+
+	private static final Set<String> classKeeper = new HashSet<>();
+
+	private final static boolean OUTPUT_ONLY_SINGLE_CLASSES = true;
+
 	public static void main(String[] args) {
+		classToWekaMappings.put("class java.lang.Double", "numeric");
+		classToWekaMappings.put("class java.lang.String", "string");
+		classToWekaMappings.put("class java.lang.Integer", "integer");
+		toIgnore.add("NIL");
+		toIgnore.add("");
+		toIgnore.add("-1337.0");
+		toIgnore.add("-1337");
+		for (Object o : LinkerUtils.defaultList) {
+			toIgnore.add(o.toString());
+		}
+
+		run();
+	}
+
+	private static void run() {
 		final List<Linker> linkers = Lists.newArrayList();
 		final List<String> missingDocs = Lists.newArrayList();
 
@@ -53,7 +82,9 @@ public class LauncherCoNLLBuildFeatures {
 							+ tsvInFile.getAbsolutePath());
 			return;
 		}
-		final List<String> inTexts = LauncherCoNLLTSVAnnotation.parseTSV(tsvInFile, startDoc, stopDoc);
+
+		final Map<String, String> results = new HashMap<>();
+		final List<String> inTexts = LauncherCoNLLTSVAnnotation.parseTSV(tsvInFile, startDoc, stopDoc, results);
 
 		final Comparator<Mention> mentionOffsetComparator = new Comparator<Mention>() {
 			@Override
@@ -69,9 +100,9 @@ public class LauncherCoNLLBuildFeatures {
 			}
 		};
 
-		final File outFile = new File(outDir + "/" + "outVector.txt");
+		final File outVectorFile = new File(outDir + "/" + "outVector.txt");
 		final List<String> featureTypes = Lists.newArrayList();
-		try (final BufferedWriter bw = new BufferedWriter(new FileWriter(outFile))) {
+		try (final BufferedWriter bw = new BufferedWriter(new FileWriter(outVectorFile))) {
 			final int endCond = Math.min(stopDoc, inTexts.size() + startDoc);
 			for (int docCounter = startDoc; docCounter < endCond; ++docCounter) {
 				System.out.println("Document#" + docCounter);
@@ -80,7 +111,7 @@ public class LauncherCoNLLBuildFeatures {
 				final String inText = inTexts.get(docCounter - startDoc);
 				System.out.println("Input text #" + docCounter + " (list item#" + (docCounter - startDoc) + "):"
 						+ inText.substring(0, Math.min(inText.length(), 50)) + " (...)");
-				final Map<String, List<Mention>> linkerMentionMap = new TreeMap<>();
+				final TreeMap<String, List<Mention>> linkerMentionMap = new TreeMap<>();
 				for (int i = 0; i < linkers.size(); ++i) {
 					final Linker linker = linkers.get(i);
 					// A list of mentions per linker, sort them by offset + length of mention
@@ -211,83 +242,158 @@ public class LauncherCoNLLBuildFeatures {
 					final StringBuilder sbFeatures = new StringBuilder();
 					boolean addedMentionToOutputStuff = false;
 					final List<Object> combinedFeatures = Lists.newArrayList();
-					int iterCounter = -1;
+					final List<FeatureStringable> aggregateFeatureRequests = Lists.newArrayList();
+					Integer startOffset = null;
+					String surfaceForm = null;
+
 					for (Map.Entry<String, Iterator<Mention>> entry : iteratorMap.entrySet()) {
-						iterCounter = (iterCounter + 1) % iteratorMap.size();
-						final List<Object> features = Lists.newArrayList();
 						if (minimumMentionKeys.contains(entry.getKey())) {
 							// current entry's pointer is at a minimum right now
-							// so let's get it
+							// so let's get it and get its features
 							final Mention mention = currentElements.get(entry.getKey());
 							if (!addedMentionToOutputStuff) {
 								// Just add general mention stuff to the beginning of the vector
 								final List<Object> mentionFeatures = LinkerUtils.getMentionFeatures(docCounter, inText,
 										mention);
-								features.addAll(mentionFeatures);
-
-								// Add default values for the ones that didn't have an entry for this mention
-								// since we want mention details to be first...
-								for (int i = 0; i < iterCounter; ++i) {
-									// default vector
-									features.addAll(LinkerUtils.toFeatures(null));
-								}
+								combinedFeatures.addAll(mentionFeatures);
+								surfaceForm = mention.getOriginalMention();
+								startOffset = mention.getOffset();
 								addedMentionToOutputStuff = true;
 							}
 
-							// and let's merge / output it
+							// and let's add features for this linker
 							if (mention instanceof FeatureStringable) {
 								final FeatureStringable featureStringable = (FeatureStringable) mention;
 								// Write out the feature string
-								features.addAll(LinkerUtils.toFeatures(featureStringable));// featureStringable.toFeatureString();
+								// features.addAll(LinkerUtils.toFeatures(featureStringable));//
+								// featureStringable.toFeatureString();
+								aggregateFeatureRequests.add(featureStringable);
 							} else {
 								System.err.println("Mention[" + mention + "] is not a FeatureStringable");
 								// create a new feature string for mentions
 								// this allows for recovery of feature vector (dimensions) when sth has gone
 								// wrong in terms of mention creation
-								features.addAll(LinkerUtils.toFeatures(null));
+								// features.addAll(LinkerUtils.toFeatures(null));
+								aggregateFeatureRequests.add(null);
 							}
 
 							// and move the pointer forward
 							currentElements.put(entry.getKey(), entry.getValue().next());
 						} else {
-							// Output empty / default stuff for this vector...
-							final String key = entry.getKey();
-							// For now just skip
-							// features = LinkerUtils.toFeatureString(null);
-							// don't output anything, so that the next iteration fills out the default so
-							// mentions are in the beginning
-							if (!addedMentionToOutputStuff) {
-								// clear features?
-								// features = null;
-							} else {
-								features.addAll(LinkerUtils.toFeatures(null));
-
-							}
-						}
-						// Merge them into a feature vector
-						if (features != null && features.size() > 0) {
-							combinedFeatures.addAll(features);
-							// sbFeatures.append(LinkerUtils.featuresToStr(features));
+							aggregateFeatureRequests.add(null);
 						}
 					}
 
-					if (!addedMentionToOutputStuff) {
-						// Did not have any mention to output it seems, so let's ignore this line
-						// aka. do not output anything
-						// among others b/c the features would be messed up due to missing mention
-						// information...
-					} else {
-						sbFeatures.append(LinkerUtils.featuresToStr(combinedFeatures));
-						checkConsistency(docCounter, combinedFeatures, featureTypes);
-						String strFeatures = sbFeatures.toString();
-						// Remove last comma if there is one
-						if (strFeatures.endsWith(",")) {
-							// remove last character
-							strFeatures = strFeatures.substring(0, strFeatures.length() - 1);
+					// Add wanted entities
+//					System.out.println(
+//							"Doc Counter[" + docCounter + "] offset[" + startOffset + "] sf[" + surfaceForm + "]");
+					final String resultKey = LauncherCoNLLTSVAnnotation.makeResultKey(docCounter, startOffset,
+							surfaceForm);
+//					System.out.println("Result key: " + resultKey);
+					final String res = results.get(resultKey);
+					final String wantedEntity = res == null ? "N/A" : res;
+//					if (res != null)
+//					{
+//						System.out.println("Match for entity! "+res);
+//					}
+
+					// Fill it up till it's full for all linkers
+					for (int i = aggregateFeatureRequests.size(); i < keys.size(); ++i) {
+						aggregateFeatureRequests.add(null);
+					}
+
+					if (aggregateFeatureRequests != null && aggregateFeatureRequests.size() > 0) {
+						boolean allNull = (aggregateFeatureRequests.get(0) == null);
+
+						for (int i = 1; i < aggregateFeatureRequests.size(); ++i) {
+							final Object o = aggregateFeatureRequests.get(i);
+							allNull &= (o == null);
 						}
-						bw.write(strFeatures);
-						bw.write(Strings.LINE_SEPARATOR);
-						bw.flush();
+
+						if (!allNull) {
+							if (!addedMentionToOutputStuff) {
+								throw new RuntimeException("Haven't added mention stuff to the beginning");
+							}
+							// Removes mention stuff from beginning... TODO: REMOVE THIS LINE FOR THEM TO BE
+							// OUTPUT
+							// combinedFeatures.clear();
+							final String processedWantedEntity = wantedEntity.replace("http://en.wikipedia.org/wiki/",
+									"");
+							final TreeSet<String> correctLinkers = new TreeSet<>();
+							;
+							for (FeatureStringable fs : aggregateFeatureRequests) {
+								if (fs == null) {
+									continue;
+								} else if (fs instanceof MentionBabelfy) {
+									final MentionBabelfy mention = (MentionBabelfy) fs;
+									final boolean hasEntity = checkIfHasCorrectEntity(processedWantedEntity, mention);
+									if (hasEntity) {
+										final String wantedLinker = linkerClassToWekaClass(BabelfyLinker.class);
+										correctLinkers.add(wantedLinker);
+										classKeeper.add(wantedLinker);
+										if (OUTPUT_ONLY_SINGLE_CLASSES) {
+											break;
+										}
+									}
+								} else if (fs instanceof MentionOpenTapioca) {
+									final MentionOpenTapioca mention = (MentionOpenTapioca) fs;
+									final boolean hasEntity = checkIfHasCorrectEntity(processedWantedEntity, mention);
+									if (hasEntity) {
+										final String wantedLinker = linkerClassToWekaClass(OpenTapiocaLinker.class);
+										correctLinkers.add(wantedLinker);
+										classKeeper.add(wantedLinker);
+										if (OUTPUT_ONLY_SINGLE_CLASSES) {
+											break;
+										}
+									}
+
+								} else if (fs instanceof MentionDBpediaSpotlight) {
+									final MentionDBpediaSpotlight mention = (MentionDBpediaSpotlight) fs;
+									final boolean hasEntity = checkIfHasCorrectEntity(processedWantedEntity, mention);
+									if (hasEntity) {
+										final String wantedLinker = linkerClassToWekaClass(
+												DBpediaSpotlightLinker.class);
+										correctLinkers.add(wantedLinker);
+										classKeeper.add(wantedLinker);
+										if (OUTPUT_ONLY_SINGLE_CLASSES) {
+											break;
+										}
+									}
+								} else {
+									System.err.println("No such mention[" + fs.getClass() + "] yet accepted...");
+								}
+							}
+
+							final StringBuilder sbToPredict = new StringBuilder();
+							for (String correctLinker : correctLinkers) {
+								sbToPredict.append(correctLinker);
+							}
+							if (correctLinkers.size() == 0) {
+								sbToPredict.append("NONE");
+							}
+
+							List<Object> features = LinkerUtils.toFeatures(aggregateFeatureRequests);
+							if (sbToPredict.length() == 0) {
+								throw new RuntimeException("ERROR - Empty prediction...");
+							}
+							features.add(sbToPredict.toString());
+							combinedFeatures.addAll(features);
+							// combinedFeatures.add(sbToPredict.toString());
+							sbFeatures.append(LinkerUtils.featuresToStr(combinedFeatures));
+							checkConsistency(docCounter, combinedFeatures, featureTypes);
+							String strFeatures = sbFeatures.toString();
+							// Remove last comma if there is one
+							if (strFeatures.endsWith(",")) {
+								// remove last character
+								strFeatures = strFeatures.substring(0, strFeatures.length() - 1);
+							}
+							bw.write(strFeatures);
+							bw.write(Strings.LINE_SEPARATOR);
+							bw.flush();
+						}
+
+					} else {
+						combinedFeatures.clear();
 					}
 				}
 			}
@@ -295,16 +401,161 @@ public class LauncherCoNLLBuildFeatures {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Types of features:");
-		int typeCounter = 1;
-		for (String type : featureTypes) {
-			System.out.println(typeCounter++ + " " + type);
-		}
+
+		// Read the outVectorFile, process the lines and output
+
+		// If the token is not NIL --> output it in the form of: INDEX VALUE
+
+		final String outPathFeatures = "orchestration_features.arff";
+		final File outFileFeatures = new File(outDir + "/" + outPathFeatures);
+		readVectorFileOutputARFF(linkers, featureTypes, outVectorFile, outFileFeatures);
+
 		// Output missing documents
 		System.out.println("Missing documents[" + missingDocs.size() + "]:");
 		for (String doc : missingDocs) {
 			System.out.println(doc);
 		}
+	}
+
+	private static boolean checkIfHasCorrectEntity(final String wantedEntity, Mention mention) {
+		if (mention.getAssignment() != null && sameEntity(mention.getAssignment().getAssignment(), wantedEntity)) {
+			return true;
+		}
+		for (PossibleAssignment poss : mention.getPossibleAssignments()) {
+			if (sameEntity(poss.getAssignment(), wantedEntity)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * TODO: Check for sameAs links here
+	 * 
+	 * @param assignment
+	 * @param processedWantedEntity
+	 * @return
+	 */
+	private static boolean sameEntity(String assignment, String processedWantedEntity) {
+		if (assignment.equalsIgnoreCase(processedWantedEntity)) {
+			return true;
+		}
+		if (assignment.contains(processedWantedEntity)) {
+			return true;
+		}
+		return false;
+	}
+
+	private static void readVectorFileOutputARFF(final List<Linker> linkers, final List<String> featureTypes,
+			File outVectorFile, File outFileFeatures) {
+		try (final BufferedReader br = new BufferedReader(new FileReader(outVectorFile));
+				final BufferedWriter bwFeatures = new BufferedWriter(new FileWriter(outFileFeatures))) {
+			// Write the preamble w/ the feature types etc
+			System.out.println("Types of features:");
+			int typeCounter = 1;
+			
+			final String relation = "@RELATION agnos.orchestration";
+			System.out.println(relation);
+			bwFeatures.write(relation);
+			bwFeatures.newLine();
+			bwFeatures.newLine();
+
+			
+			for (String type : featureTypes) {
+				final String attribute = "@ATTRIBUTE feature-" + typeCounter++ + "\t" + translateToWekaType(type);
+				System.out.println(attribute);
+				bwFeatures.write(attribute);
+				bwFeatures.newLine();
+			}
+			final String classLabelStart = "@ATTRIBUTE CLASS_LABEL\t{NONE,";
+			System.out.print(classLabelStart);
+			bwFeatures.write(classLabelStart);
+
+			// Output the class for supervised learning
+			if (OUTPUT_ONLY_SINGLE_CLASSES) {
+				final String firstLinkerStr = linkerClassToWekaClass(linkers.get(0).getClass());
+				System.out.print(firstLinkerStr);
+				bwFeatures.write(firstLinkerStr);
+				for (int i = 1; i < linkers.size(); ++i) {
+					final Linker linker = linkers.get(i);
+					final String toOutput = "," + linkerClassToWekaClass(linker.getClass());
+					bwFeatures.write(toOutput);
+					System.out.print(toOutput);
+				}
+			} else {
+				// Outputs all found class-combinations
+				Iterator<String> classIterator = classKeeper.iterator();
+				if (classIterator.hasNext()) {
+					final String firstLinkerStr = classIterator.next();
+					System.out.print(firstLinkerStr);
+					bwFeatures.write(firstLinkerStr);
+				}
+
+				while (classIterator.hasNext()) {
+					String clazz = classIterator.next();
+					final String toOutput = "," + clazz;
+					bwFeatures.write(toOutput);
+					System.out.print(toOutput);
+				}
+			}
+
+			final String classLabelEnd = "}";
+			System.out.println(classLabelEnd);
+			bwFeatures.write(classLabelEnd);
+			bwFeatures.newLine();
+			bwFeatures.newLine();
+			bwFeatures.write("@DATA");
+			bwFeatures.newLine();
+			bwFeatures.newLine();
+
+			// Now read through the vector, process them (remove NIL entries) and output as
+			// "INDEX VALUE,"
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				bwFeatures.write(processVectorLine(line));
+				bwFeatures.newLine();
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	private static String linkerClassToWekaClass(Class clazz) {
+		final String[] dotSplit = clazz.getName().split("\\.");
+		return dotSplit[dotSplit.length - 1];
+	}
+
+	private static String processVectorLine(String line) {
+		final String[] commaTokens = line.split(",");
+
+		final StringBuilder sb = new StringBuilder("{");
+		boolean first = true;
+		for (int i = 0; i < commaTokens.length; ++i) {
+			final String token = commaTokens[i];
+			if (!toIgnore.contains(token)) {
+				if (!first) {
+					sb.append(",");
+				}
+				sb.append(i + " " + token);
+				first = false;
+			}
+		}
+		sb.append("}");
+		return sb.toString();
+	}
+
+	private static String translateToWekaType(String type) {
+		final String ret = classToWekaMappings.get(type);
+		if (ret == null) {
+			throw new RuntimeException("ERROR - No Type defined for '" + type + "'");
+		}
+		return ret;
 	}
 
 	/**
@@ -318,19 +569,27 @@ public class LauncherCoNLLBuildFeatures {
 		if (featureTypes.size() == 0) {
 			// fill it
 			for (Object feature : combinedFeatures) {
-				featureTypes.add(feature.getClass().toString());
+				final String featureType = // feature + "," +
+						feature.getClass().toString();
+				featureTypes.add(featureType);
 			}
 		} else {
 			// else check that it is consistent
 			if (combinedFeatures.size() != featureTypes.size()) {
 				throw new RuntimeException("[Doc#" + docCounter + "] Inconsistent feature sizes! (Expected["
-						+ featureTypes.size() + "], Found[" + combinedFeatures.size() + "])");
+						+ featureTypes.size() + "], Found[" + combinedFeatures.size() + "]):" + Strings.LINE_SEPARATOR
+						+ combinedFeatures);
 			}
 			for (int i = 0; i < combinedFeatures.size(); ++i) {
-				if (!featureTypes.get(i).equals(combinedFeatures.get(i).getClass().toString())) {
+//				final String featureTypeInfo = featureTypes.get(i);
+//				final String featureType = featureTypeInfo.split(",")[1];
+				final String featureType = featureTypes.get(i);
+				if (!featureType.equals(combinedFeatures.get(i).getClass().toString())) {
 					throw new RuntimeException("[Doc#" + docCounter + "/Sizes(" + combinedFeatures.size()
-							+ ")] Inconsistent feature types at index[" + i + "]! (Expected[" + featureTypes.get(i)
-							+ "], Found[" + combinedFeatures.get(i).getClass().toString() + ", "+combinedFeatures.get(i)+"])"+Strings.LINE_SEPARATOR+"Combined Features:"+Strings.LINE_SEPARATOR+combinedFeatures);
+							+ ")] Inconsistent feature types at index[" + i + "]! (Expected[" + featureType
+							+ "], Found[" + combinedFeatures.get(i).getClass().toString() + ", "
+							+ combinedFeatures.get(i) + "])" + Strings.LINE_SEPARATOR + "Combined Features:"
+							+ Strings.LINE_SEPARATOR + combinedFeatures);
 				}
 			}
 		}

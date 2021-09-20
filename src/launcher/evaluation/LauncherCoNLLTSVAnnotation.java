@@ -9,8 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -34,7 +36,7 @@ public class LauncherCoNLLTSVAnnotation {
 			+ "AIDA-YAGO2-dataset.tsv";
 
 	public static void main(String[] args) {
-		final int startAt = 1065;
+		final int startAt = 0;
 		final int stopAt = 2000;
 		final boolean cont = false;
 		final File outLog = new File(outDir + "/" + "log.txt");
@@ -69,8 +71,8 @@ public class LauncherCoNLLTSVAnnotation {
 
 		// Input TSV file
 		final File inFile = new File(tsvInPath);
-
-		final List<String> inTexts = parseTSV(inFile, startDoc, stopDoc);
+		final Map<String, String> results = new HashMap<>();
+		final List<String> inTexts = parseTSV(inFile, startDoc, stopDoc, results);
 
 		// Now that we've collected the input texts, annotate them
 		for (int docCounter = startDoc; docCounter < inTexts.size(); ++docCounter) {
@@ -78,7 +80,22 @@ public class LauncherCoNLLTSVAnnotation {
 		}
 	}
 
-	public static List<String> parseTSV(final File inFile, final int startDoc, final int stopDoc) {
+	
+	public static String makeResultKey(final Integer docCounter, final Integer startOffset, final String surfaceForm)
+	{
+		return (docCounter==null?"no_doc":docCounter)+"_"+(startOffset==null?"no_offset":startOffset)+"_"+(surfaceForm==null?"no_sf":surfaceForm);
+	}
+	
+	/**
+	 * 
+	 * @param inFile   TSV file with the contents
+	 * @param startDoc which document to start at
+	 * @param stopDoc  which document to end at
+	 * @param results  where to put the results
+	 * @return
+	 */
+	public static List<String> parseTSV(final File inFile, final int startDoc, final int stopDoc,
+			Map<String, String> results) {
 		// List w/ textual documents
 		final List<String> ret = Lists.newArrayList();
 
@@ -97,7 +114,8 @@ public class LauncherCoNLLTSVAnnotation {
 		final int cols = EnumTSVCoNLL2011.values().length;
 		final StringBuilder sbInputText = new StringBuilder();
 		final String DELIM = " ";
-		//Currently populated w/ Wikipedia URLs but unused - meant to potentially check later on what entities there are
+		// Currently populated w/ Wikipedia URLs but unused - meant to potentially check
+		// later on what entities there are
 		final Set<String> allEntities = new HashSet<>();
 
 		// - Each document starts with a line: -DOCSTART- (<docid>)
@@ -148,7 +166,7 @@ public class LauncherCoNLLTSVAnnotation {
 							: "N/A";
 
 					if (sbInputText.length() > 0 && docCounter >= startDoc && docCounter <= stopDoc) {
-						//System.out.println("Input document " + oldDocID + " - " + oldDocDomain);
+						// System.out.println("Input document " + oldDocID + " - " + oldDocDomain);
 						ret.add(sbInputText.toString());
 					} else {
 						// Skipping
@@ -171,6 +189,10 @@ public class LauncherCoNLLTSVAnnotation {
 				final String wikipediaURL = rowLength > 4 ? row[4] : null;
 				final String wikipediaID = rowLength > 5 ? row[5] : null;
 				final String freebaseMID = rowLength > 6 ? row[6] : null;
+				
+				final int startOffset = sbInputText.toString().length();
+				final String resultKey = makeResultKey(docCounter, startOffset, row[0]);
+				results.put(resultKey, wikipediaURL);
 				sbInputText.append(row[0]);
 				sbInputText.append(DELIM);
 				// Add the wikipediaURL in case it is useful for evaluation later on

@@ -44,8 +44,8 @@ public class DBpediaSpotlightLinker extends AbstractLinkerURLGET {
 	@Override
 	public boolean init() {
 		// sets the scheme
-		// https();
-		http();
+		https();
+		//http();
 		// sets the url
 		url("api.dbpedia-spotlight.org");
 		// sets the suffix
